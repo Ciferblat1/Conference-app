@@ -1,0 +1,24 @@
+CREATE TABLE IF NOT EXISTS users (
+
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    fullname VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL -- Participant, Organizer, Expert
+);
+
+CREATE TABLE IF NOT EXISTS directions (
+
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS applications (
+
+    id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
+    author_id UUID NOT NULL REFERENCES users(id),
+    direction_id UUID NOT NULL REFERENCES directions(id),
+    status VARCHAR(255) NOT NULL DEFAULT 'DRAFT', -- DRAFT, SUBMITTED, WITHDRAWN 
+    body TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
