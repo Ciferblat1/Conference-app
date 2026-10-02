@@ -1,6 +1,7 @@
 package com.github.Ciferblat1.conference_app.controller;
 
 import java.util.UUID;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +47,17 @@ public class DirectionController {
         Direction direction = directionService.getDirectionById(id);
 
         DirectionResponse response = new DirectionResponse(direction.getId(), direction.getTitle());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping 
+    public ResponseEntity<List<DirectionResponse>> getAllDirections() {
+
+        List<Direction> directions = directionService.getAllDirections();
+
+        List<DirectionResponse> response = directions.stream()
+        .map(direction -> new DirectionResponse(direction.getId(), direction.getTitle())).toList();
 
         return ResponseEntity.ok(response);
     }

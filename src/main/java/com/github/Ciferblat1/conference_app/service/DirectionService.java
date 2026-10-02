@@ -1,5 +1,6 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class DirectionService {
         return directionRepository.save(direction);
     } 
 
-    
+
     @Transactional(readOnly = true)
     public Direction getDirectionById(UUID id) {
 
@@ -38,5 +39,11 @@ public class DirectionService {
 
         return directionRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Направление с ID " + id + " не найдено"));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Direction> getAllDirections() {
+
+        return directionRepository.findAll();
     }
 }
