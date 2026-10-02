@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import com.github.Ciferblat1.conference_app.entity.Direction;
+import com.github.Ciferblat1.conference_app.exception.DirectionNotFoundException;
 import com.github.Ciferblat1.conference_app.repository.DirectionRepository;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +39,7 @@ public class DirectionService {
         }
 
         return directionRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Направление с ID " + id + " не найдено"));
+            .orElseThrow(() -> new DirectionNotFoundException(id));
     }
 
     @Transactional(readOnly = true)
