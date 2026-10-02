@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,11 +18,11 @@ import lombok.NoArgsConstructor;
 @Entity 
 @Table(name = "users")
 @Getter 
-@NoArgsConstructor 
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
     
     @Id 
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
 
@@ -35,7 +36,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
-    
+
     public User(String email, String fullname, UserRole role) {
         this.email = email;
         this.fullname = fullname;
