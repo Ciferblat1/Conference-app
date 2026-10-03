@@ -11,7 +11,7 @@ public record CreateApplicationRequest(
     UUID authorId, 
 
     @NotNull(message = "Направление обязательно")
-    UUID direction, 
+    UUID directionId, 
 
     @NotBlank 
     String body
