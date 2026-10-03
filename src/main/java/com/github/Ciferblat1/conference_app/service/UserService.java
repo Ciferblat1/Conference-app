@@ -1,5 +1,6 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -49,5 +50,11 @@ public class UserService {
 
         return userRepository.findById(id)
             .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    
+    @Transactional(readOnly = true)
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }

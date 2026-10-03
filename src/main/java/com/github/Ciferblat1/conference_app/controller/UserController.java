@@ -1,5 +1,6 @@
 package com.github.Ciferblat1.conference_app.controller;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,21 @@ public class UserController {
         UserResponse response = new UserResponse(
             user.getId(), user.getEmail(), user.getFullname(), user.getRole()
         );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping 
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+
+        List<User> users = userService.getAllUsers();
+
+        List<UserResponse> response = users.stream()
+            .map(user -> new UserResponse(
+                user.getId(), 
+                user.getEmail(), 
+                user.getFullname(), 
+                user.getRole())).toList();
 
         return ResponseEntity.ok(response);
     }
