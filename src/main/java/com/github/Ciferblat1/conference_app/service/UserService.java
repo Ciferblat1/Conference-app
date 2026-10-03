@@ -1,12 +1,14 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import com.github.Ciferblat1.conference_app.entity.User;
 import com.github.Ciferblat1.conference_app.entity.UserRole;
 import com.github.Ciferblat1.conference_app.exception.EmailAlreadyExistsException;
+import com.github.Ciferblat1.conference_app.exception.UserNotFoundException;
 import com.github.Ciferblat1.conference_app.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -35,5 +37,17 @@ public class UserService {
         User user = new User(email, fullname, role);
         userRepository.save(user);
         return user;
+    }
+
+
+    @Transactional(readOnly = true)
+    public User getUserById(UUID id) {
+
+        if(id == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        return userRepository.findById(id)
+            .orElseThrow(() -> new UserNotFoundException(id));
     }
 }

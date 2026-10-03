@@ -33,4 +33,17 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ProblemDetail handleUserNotFound(UserNotFoundException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+            HttpStatus.NOT_FOUND, exception.getMessage()
+        );
+
+        problem.setTitle("Пользователь не найден");
+
+        return problem;
+    }
 }
