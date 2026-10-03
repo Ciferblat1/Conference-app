@@ -3,6 +3,7 @@ package com.github.Ciferblat1.conference_app.dto;
 import com.github.Ciferblat1.conference_app.entity.UserRole;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record CreateUserRequest(
@@ -15,7 +16,7 @@ public record CreateUserRequest(
     @NotBlank 
     String fullname,
 
-    @Size(max = 50, message = "Роль должна быть не длиннее 50 символов")
+    @NotNull 
     UserRole role
 ) {
 } 
