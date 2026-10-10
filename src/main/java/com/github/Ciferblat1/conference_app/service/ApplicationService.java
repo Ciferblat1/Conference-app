@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.Ciferblat1.conference_app.entity.Application;
 import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.entity.User;
+import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.DirectionNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.UserNotFoundException;
 import com.github.Ciferblat1.conference_app.repository.ApplicationRepository;
@@ -59,5 +60,16 @@ public class ApplicationService {
 
         return  applicationRepository.findAll();
 
+    }
+
+
+    public Application getApplicationById(UUID id) {
+
+        if(id == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        
+        return applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
     }
 }
