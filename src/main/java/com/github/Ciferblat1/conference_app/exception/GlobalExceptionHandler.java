@@ -46,4 +46,18 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+
+
+    @ExceptionHandler(ApplicationNotFoundException.class)
+    public ProblemDetail handleApplicationNotFound(ApplicationNotFoundException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+            HttpStatus.NOT_FOUND, exception.getMessage()
+        );
+
+        problem.setTitle("Заявка не найдена");
+
+        return problem;
+    }
 }
