@@ -30,6 +30,7 @@ public class DirectionService {
         return directionRepository.save(direction);
     } 
 
+    
 
     @Transactional(readOnly = true)
     public Direction getDirectionById(UUID id) {
@@ -41,6 +42,8 @@ public class DirectionService {
         return directionRepository.findById(id)
             .orElseThrow(() -> new DirectionNotFoundException(id));
     }
+
+
 
     @Transactional(readOnly = true)
     public List<Direction> getAllDirections() {

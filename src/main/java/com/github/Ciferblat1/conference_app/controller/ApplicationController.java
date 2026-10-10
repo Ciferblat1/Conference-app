@@ -1,7 +1,10 @@
 package com.github.Ciferblat1.conference_app.controller;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,5 +47,25 @@ public class ApplicationController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+
+    @GetMapping  
+    public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
+
+        List<Application> applications = applicationService.getAllApplications();
+
+        List<ApplicationResponse> response = applications.stream().map(application -> 
+            new ApplicationResponse(
+                application.getId(), 
+                application.getAuthor().getId(), 
+                application.getDirection().getId(), 
+                application.getStatus(), 
+                application.getBody(), 
+                application.getCreatedAt(), 
+                application.getUpdatedAt())
+            ).toList();
+
+        return ResponseEntity.ok(response);
     }
 }

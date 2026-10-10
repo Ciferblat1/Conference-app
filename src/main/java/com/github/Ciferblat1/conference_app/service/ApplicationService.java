@@ -1,5 +1,6 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -25,13 +26,13 @@ public class ApplicationService {
     private final DirectionRepository directionRepository;
 
     @Transactional 
-    public Application createApplication(UUID authorId, UUID directionID, String body) {
+    public Application createApplication(UUID authorId, UUID directionId, String body) {
 
         if(authorId == null) {
             throw new IllegalArgumentException("ID автора не может быть null");
         }
 
-        if(directionID == null) {
+        if(directionId == null) {
             throw new IllegalArgumentException("ID направления не может быть null");
         }
 
@@ -42,12 +43,21 @@ public class ApplicationService {
         User author = userRepository.findById(authorId)
             .orElseThrow(() -> new UserNotFoundException(authorId));
 
-        Direction direction = directionRepository.findById(directionID)
-            .orElseThrow(() -> new DirectionNotFoundException(directionID));
+        Direction direction = directionRepository.findById(directionId)
+            .orElseThrow(() -> new DirectionNotFoundException(directionId));
 
         Application application = new Application(author, direction, body);
 
         applicationRepository.save(application);
         return application;
+    }
+
+
+
+    @Transactional(readOnly = true)
+    public List<Application> getAllApplications() {
+
+        return  applicationRepository.findAll();
+
     }
 }
