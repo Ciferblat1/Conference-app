@@ -1,5 +1,6 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,13 +9,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.Ciferblat1.conference_app.entity.Application;
 import com.github.Ciferblat1.conference_app.entity.ApplicationStatus;
+import com.github.Ciferblat1.conference_app.entity.ConferenceSettings;
 import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.entity.User;
+import com.github.Ciferblat1.conference_app.exception.ApplicationDeadlinePassedException;
 import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
+import com.github.Ciferblat1.conference_app.exception.ConferenceSettingsNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.DirectionNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.InvalidApplicationStateException;
 import com.github.Ciferblat1.conference_app.exception.UserNotFoundException;
 import com.github.Ciferblat1.conference_app.repository.ApplicationRepository;
+import com.github.Ciferblat1.conference_app.repository.ConferenceSettingsRepository;
 import com.github.Ciferblat1.conference_app.repository.DirectionRepository;
 import com.github.Ciferblat1.conference_app.repository.UserRepository;
 
@@ -27,6 +32,7 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final UserRepository userRepository;
     private final DirectionRepository directionRepository;
+    private final ConferenceSettingsRepository conferenceSettingsRepository;
 
     @Transactional 
     public Application createApplication(UUID authorId, UUID directionId, String body) {
@@ -42,6 +48,8 @@ public class ApplicationService {
         if(body == null || body.isBlank()) {
             throw new IllegalArgumentException("Тело заявки не может быть пустым");
         }
+
+        checkSubmissionDeadline();
 
         User author = userRepository.findById(authorId)
             .orElseThrow(() -> new UserNotFoundException(authorId));
@@ -80,9 +88,15 @@ public class ApplicationService {
     @Transactional 
     public Application updateApplicationBody(UUID id, String newBody) {
 
-        if(id == null) {
+        if(id == null || newBody == null) {
             throw new IllegalArgumentException("ID не может быть null");
         }
+
+        if (newBody == null || newBody.isBlank()) {
+            throw new IllegalArgumentException("Текст заявки не может быть пустым");
+        }
+
+        checkSubmissionDeadline();
 
         Application application = getApplicationById(id);
 
@@ -104,6 +118,8 @@ public class ApplicationService {
             throw new IllegalArgumentException("ID не может быть null");
         }
 
+        checkSubmissionDeadline();
+
         Application application = getApplicationById(id);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED) {
@@ -114,5 +130,19 @@ public class ApplicationService {
         }
         
         return application;
+    }
+
+
+
+    private void checkSubmissionDeadline() {
+
+        Short settingsId = (short) 1;
+        
+        ConferenceSettings settings = conferenceSettingsRepository.findById(settingsId)
+            .orElseThrow(() -> new ConferenceSettingsNotFoundException(settingsId));
+
+        if(!Instant.now().isBefore(settings.getSubmissionDeadline())) {
+            throw new ApplicationDeadlinePassedException();
+        }
     }
 }

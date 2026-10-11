@@ -71,4 +71,25 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+
+    @ExceptionHandler(ConferenceSettingsNotFoundException.class)
+    public ProblemDetail handleConferenceSettingsNotFound(ConferenceSettingsNotFoundException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+
+        problem.setTitle("Настройки конференции не найдены");
+
+        return problem;
+    }
+
+
+
+    @ExceptionHandler(ApplicationDeadlinePassedException.class)
+    public ProblemDetail handleApplicationDeadlinePassed(ApplicationDeadlinePassedException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+
+        problem.setTitle("Дедлайн подачи заявления прошел");
+
+        return problem;
+    }
 }
