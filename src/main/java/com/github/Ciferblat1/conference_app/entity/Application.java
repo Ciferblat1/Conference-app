@@ -80,7 +80,7 @@ public class Application {
     }
 
 
-    public void withdrow() {
+    public void withdraw() {
         this.status = ApplicationStatus.WITHDRAWN;
     }
 }

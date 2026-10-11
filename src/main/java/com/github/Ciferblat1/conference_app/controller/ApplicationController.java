@@ -49,7 +49,7 @@ public class ApplicationController {
     @PostMapping("{id}/withdraw")
     public ResponseEntity<ApplicationResponse> setWithdrowStatus(@PathVariable UUID id) {
 
-        Application application = applicationService.setWithdrowStatus(id);
+        Application application = applicationService.setWithdrawStatus(id);
 
         ApplicationResponse response = toResponse(application);
 

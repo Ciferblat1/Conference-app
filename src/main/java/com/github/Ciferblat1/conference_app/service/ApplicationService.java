@@ -86,15 +86,19 @@ public class ApplicationService {
 
         Application application = getApplicationById(id);
 
-
-        application.updateBody(newBody);
+        if(application.getStatus() == ApplicationStatus.SUBMITTED) {
+            application.updateBody(newBody);
+        }
+        else {
+            throw new InvalidApplicationStateException(id, application.getStatus());
+        }
 
         return application;
     }
 
 
     @Transactional 
-    public Application setWithdrowStatus(UUID id) {
+    public Application setWithdrawStatus(UUID id) {
 
         if(id == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -103,7 +107,7 @@ public class ApplicationService {
         Application application = getApplicationById(id);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED) {
-            application.withdrow();
+            application.withdraw();
         }
         else {
             throw new InvalidApplicationStateException(id, application.getStatus());
