@@ -1,0 +1,10 @@
+UPDATE applications
+SET status = CASE status
+    WHEN 'DRAFT' THEN 'SUBMITTED'
+    WHEN 'SUBMITTED' THEN 'APPROVED'
+    ELSE status
+END
+WHERE status IN ('DRAFT', 'SUBMITTED');
+
+ALTER TABLE applications
+ALTER COLUMN status SET DEFAULT 'SUBMITTED';

@@ -1,7 +1,7 @@
 package com.github.Ciferblat1.conference_app.entity;
 
 public enum ApplicationStatus {
-    DRAFT,      // Черновик
     SUBMITTED,  // Подана
+    APPROVED,   // Одобрена организатором
     WITHDRAWN   // Отозвана учасником
 }

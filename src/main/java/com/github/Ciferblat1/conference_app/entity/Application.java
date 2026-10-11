@@ -58,7 +58,7 @@ public class Application {
         this.author = user;
         this.direction = direction;
         this.body = body;
-        this.status = ApplicationStatus.DRAFT;
+        this.status = ApplicationStatus.SUBMITTED;
     }
 
 
