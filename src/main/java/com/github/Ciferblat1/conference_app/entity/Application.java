@@ -73,4 +73,8 @@ public class Application {
     private void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    public void updateBody(String newBody) {
+        this.body = newBody;
+    }
 }

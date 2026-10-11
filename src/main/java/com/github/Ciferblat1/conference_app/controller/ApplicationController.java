@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
 import com.github.Ciferblat1.conference_app.dto.CreateApplicationRequest;
+import com.github.Ciferblat1.conference_app.dto.UpdateApplicationBodyRequest;
 import com.github.Ciferblat1.conference_app.entity.Application;
 import com.github.Ciferblat1.conference_app.service.ApplicationService;
 
@@ -75,6 +77,28 @@ public class ApplicationController {
     public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable("id") UUID id) {
 
         Application application = applicationService.getApplicationById(id);
+
+        ApplicationResponse response = new ApplicationResponse(
+            application.getId(), 
+            application.getAuthor().getId(), 
+            application.getDirection().getId(), 
+            application.getStatus(), 
+            application.getBody(), 
+            application.getCreatedAt(), 
+            application.getUpdatedAt()
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApplicationResponse> updateApplicationBody(
+        @PathVariable("id") UUID id, 
+        @Valid @RequestBody  UpdateApplicationBodyRequest request
+    ) {
+
+        Application application = applicationService.updateApplicationBody(id, request.body());
 
         ApplicationResponse response = new ApplicationResponse(
             application.getId(), 

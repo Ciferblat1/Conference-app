@@ -63,6 +63,7 @@ public class ApplicationService {
     }
 
 
+    @Transactional(readOnly = true)
     public Application getApplicationById(UUID id) {
 
         if(id == null) {
@@ -71,5 +72,21 @@ public class ApplicationService {
 
         
         return applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
+    }
+
+
+    @Transactional 
+    public Application updateApplicationBody(UUID id, String newBody) {
+
+        if(id == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        Application application = getApplicationById(id);
+
+
+        application.updateBody(newBody);
+
+        return application;
     }
 }
