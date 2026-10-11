@@ -12,6 +12,7 @@ import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.entity.User;
 import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.DirectionNotFoundException;
+import com.github.Ciferblat1.conference_app.exception.InvalidApplicationStateException;
 import com.github.Ciferblat1.conference_app.exception.UserNotFoundException;
 import com.github.Ciferblat1.conference_app.repository.ApplicationRepository;
 import com.github.Ciferblat1.conference_app.repository.DirectionRepository;
@@ -101,10 +102,13 @@ public class ApplicationService {
 
         Application application = getApplicationById(id);
 
-        if(application.getStatus() != ApplicationStatus.WITHDRAWN) {
+        if(application.getStatus() == ApplicationStatus.SUBMITTED) {
             application.withdrow();
         }
-
+        else {
+            throw new InvalidApplicationStateException(id, application.getStatus());
+        }
+        
         return application;
     }
 }

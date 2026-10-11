@@ -60,4 +60,15 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+
+    @ExceptionHandler(InvalidApplicationStateException.class)
+    public ProblemDetail handleInvalidApplicationState(InvalidApplicationStateException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+
+        problem.setTitle("Действие невозможно из-за статуса заявки");
+
+        return problem;
+    }
 }
