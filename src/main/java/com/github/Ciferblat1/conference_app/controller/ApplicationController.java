@@ -40,15 +40,7 @@ public class ApplicationController {
         );
 
 
-        ApplicationResponse response = new ApplicationResponse(
-            application.getId(),
-            application.getAuthor().getId(), 
-            application.getDirection().getId(), 
-            application.getStatus(), 
-            application.getBody(), 
-            application.getCreatedAt(), 
-            application.getUpdatedAt()
-        );
+        ApplicationResponse response = toResponse(application);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -59,16 +51,8 @@ public class ApplicationController {
 
         List<Application> applications = applicationService.getAllApplications();
 
-        List<ApplicationResponse> response = applications.stream().map(application -> 
-            new ApplicationResponse(
-                application.getId(), 
-                application.getAuthor().getId(), 
-                application.getDirection().getId(), 
-                application.getStatus(), 
-                application.getBody(), 
-                application.getCreatedAt(), 
-                application.getUpdatedAt())
-            ).toList();
+        List<ApplicationResponse> response = applications.stream()
+            .map(application -> toResponse(application)).toList();
 
         return ResponseEntity.ok(response);
     }
@@ -78,15 +62,7 @@ public class ApplicationController {
 
         Application application = applicationService.getApplicationById(id);
 
-        ApplicationResponse response = new ApplicationResponse(
-            application.getId(), 
-            application.getAuthor().getId(), 
-            application.getDirection().getId(), 
-            application.getStatus(), 
-            application.getBody(), 
-            application.getCreatedAt(), 
-            application.getUpdatedAt()
-        );
+        ApplicationResponse response = toResponse(application);
         
         return ResponseEntity.ok(response);
     }
@@ -100,7 +76,14 @@ public class ApplicationController {
 
         Application application = applicationService.updateApplicationBody(id, request.body());
 
-        ApplicationResponse response = new ApplicationResponse(
+        ApplicationResponse response = toResponse(application);
+        
+        return ResponseEntity.ok(response);
+    }
+
+
+    private ApplicationResponse toResponse(Application application) {
+        return new ApplicationResponse(
             application.getId(), 
             application.getAuthor().getId(), 
             application.getDirection().getId(), 
@@ -109,7 +92,5 @@ public class ApplicationController {
             application.getCreatedAt(), 
             application.getUpdatedAt()
         );
-        
-        return ResponseEntity.ok(response);
     }
 }
