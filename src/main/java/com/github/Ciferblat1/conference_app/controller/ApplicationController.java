@@ -46,6 +46,17 @@ public class ApplicationController {
     }
 
 
+    @PostMapping("{id}/withdrow")
+    public ResponseEntity<ApplicationResponse> setWithdrowStatus(@PathVariable UUID id) {
+
+        Application application = applicationService.setWithdrowStatus(id);
+
+        ApplicationResponse response = toResponse(application);
+
+        return ResponseEntity.ok(response);
+    }
+
+
     @GetMapping  
     public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
 

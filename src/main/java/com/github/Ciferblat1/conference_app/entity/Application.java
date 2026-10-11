@@ -74,7 +74,13 @@ public class Application {
         updatedAt = LocalDateTime.now();
     }
 
+
     public void updateBody(String newBody) {
         this.body = newBody;
+    }
+
+
+    public void withdrow() {
+        this.status = ApplicationStatus.WITHDRAWN;
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.Ciferblat1.conference_app.entity.Application;
+import com.github.Ciferblat1.conference_app.entity.ApplicationStatus;
 import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.entity.User;
 import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
@@ -86,6 +87,23 @@ public class ApplicationService {
 
 
         application.updateBody(newBody);
+
+        return application;
+    }
+
+
+    @Transactional 
+    public Application setWithdrowStatus(UUID id) {
+
+        if(id == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        Application application = getApplicationById(id);
+
+        if(application.getStatus() != ApplicationStatus.WITHDRAWN) {
+            application.withdrow();
+        }
 
         return application;
     }
