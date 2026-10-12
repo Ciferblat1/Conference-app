@@ -42,6 +42,28 @@ public class ApplicationService {
     private final ConferenceSettingsRepository conferenceSettingsRepository;
     private final ApplicationDocumentRepository applicationDocumentRepository;
 
+
+    /**
+    * Создаёт поданную заявку со статусом {@code SUBMITTED}
+    * и сохраняет её документ в одной транзакции.
+    * Создание разрешено строго до срока Т1.
+    *
+    * <p>Файл должен быть непустым, иметь расширение {@code .doc}
+    * или {@code .docx} и размер не более 10 МБ</p>
+    *
+    * @param authorId идентификатор существующего автора заявки
+    * @param directionId идентификатор существующего направления
+    * @param file загружаемый документ заявки
+    * @throws IllegalArgumentException если идентификаторы отсутствуют,
+    *         файл отсутствует или пуст, превышает допустимый размер,
+    *         имеет недопустимое имя или расширение
+    * @throws ConferenceSettingsNotFoundException если настройки конференции отсутствуют
+    * @throws ApplicationDeadlinePassedException если наступил срок Т1
+    * @throws UserNotFoundException если автор не найден
+    * @throws DirectionNotFoundException если направление не найдено
+    * @throws UncheckedIOException если не удалось прочитать содержимое файла
+    * @return созданная заявка
+    */
     @Transactional 
     public Application createApplication(UUID authorId, UUID directionId, MultipartFile file) {
 
@@ -90,11 +112,22 @@ public class ApplicationService {
             throw new IllegalArgumentException("ID не может быть null");
         }
 
-        
         return applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
     }
 
 
+    /**
+    * Заменяет документ заявки без сохранения предыдущей версии.
+    * Разрешено до Т1 для отозванных заявок. Статус заявки при замене не изменяется.
+    *
+    * @param id идентификатор заявки
+    * @param updatedFile новый документ в формате DOC или DOCX, до 10 МиБ
+    * @throws ApplicationNotFoundException если заявка не найдена
+    * @throws DocumentNotFoundException если документ заявки не найден
+    * @throws ApplicationDeadlinePassedException если наступил срок Т1
+    * @throws InvalidApplicationStateException если статус запрещает замену
+    * @return заявка после замены документа
+    */
     @Transactional 
     public Application updateApplicationDocument(UUID id, MultipartFile updatedFile) {
 
@@ -109,11 +142,11 @@ public class ApplicationService {
         ApplicationDocument document = applicationDocumentRepository.findById(id)
             .orElseThrow(() -> new DocumentNotFoundException(id));
 
-        if(application.getStatus() == ApplicationStatus.SUBMITTED || 
-            application.getStatus() == ApplicationStatus.WITHDRAWN) 
+        if( application.getStatus() == ApplicationStatus.WITHDRAWN) 
         {
             byte[] content = readFileContent(updatedFile);
             document.updateDocument(updatedFile.getOriginalFilename(), contentType, content);
+            application.submit();
             application.onUpdate();
         }
         else {
@@ -147,6 +180,11 @@ public class ApplicationService {
 
 
 
+    /**
+     * Проверяет, прошел ли момент дедлайна подачи заявки
+     * 
+     * @throws ApplicationDeadlinePassedException если дедлайн уже прошел
+     */
     private void checkSubmissionDeadline() {
 
         Short settingsId = (short) 1;
@@ -160,6 +198,16 @@ public class ApplicationService {
     }
 
 
+    /**
+     * Проверяет файл на корректность
+     * 
+     * @param file проверяемый файл
+     * @throws IllegalArgumentException если файл пуст
+     * @throws IllegalArgumentException если размер файла превышает 10МБ
+     * @throws IllegalArgumentException если имя файла отсутствует или длиннее 255 символов
+     * @throws IllegalArgumentException если тип файла не .doc или .docx
+     * @return {@code true}, если файл корректен, {@code false} иначе
+     */
     private String checkFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Файл заявки обязателен");
@@ -168,11 +216,10 @@ public class ApplicationService {
         long maxFileSize = 10L * 1024 * 1024;
 
         if (file.getSize() > maxFileSize) {
-            throw new IllegalArgumentException("Размер файла не должен превышать 10 МиБ");
+            throw new IllegalArgumentException("Размер файла не должен превышать 10 МБ");
         }
 
         String originalFilename = file.getOriginalFilename();
-
         if (originalFilename == null
             || originalFilename.isBlank()
             || originalFilename.length() > 255) 
@@ -197,6 +244,13 @@ public class ApplicationService {
     }
 
 
+    /**
+     * Считывает данные из файла
+     * 
+     * @param file читаемый файл
+     * @throws UncheckedIOException если не удалось прочитать файл
+     * @return данные файла
+     */
     private byte[] readFileContent(MultipartFile file) {
         try {
             return file.getBytes();

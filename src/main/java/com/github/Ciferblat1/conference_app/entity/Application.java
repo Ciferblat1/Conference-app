@@ -72,4 +72,8 @@ public class Application {
     public void withdraw() {
         this.status = ApplicationStatus.WITHDRAWN;
     }
+
+    public void submit() {
+        this.status = ApplicationStatus.SUBMITTED;
+    }
 }
