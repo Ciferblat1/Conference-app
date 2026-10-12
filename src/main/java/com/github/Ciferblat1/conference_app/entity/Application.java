@@ -65,11 +65,7 @@ public class Application {
     }
 
     @PreUpdate 
-    private void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
-    public void markDocumentUpdated() {
+    public void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 

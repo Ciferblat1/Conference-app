@@ -114,7 +114,7 @@ public class ApplicationService {
         {
             byte[] content = readFileContent(updatedFile);
             document.updateDocument(updatedFile.getOriginalFilename(), contentType, content);
-            application.markDocumentUpdated();
+            application.onUpdate();
         }
         else {
             throw new InvalidApplicationStateException(id, application.getStatus());
@@ -198,13 +198,10 @@ public class ApplicationService {
 
 
     private byte[] readFileContent(MultipartFile file) {
-    try {
-        return file.getBytes();
-    } catch (IOException exception) {
-        throw new UncheckedIOException(
-                "Не удалось прочитать файл",
-                exception
-        );
+        try {
+            return file.getBytes();
+        } catch (IOException exception) {
+            throw new UncheckedIOException("Не удалось прочитать файл", exception);
+        }
     }
-}
 }

@@ -13,6 +13,8 @@ import com.github.Ciferblat1.conference_app.dto.DirectionResponse;
 import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.service.DirectionService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 
+@Tag (
+    name = "Направления",
+    description = "Создание и получение направлений"
+)
 @RestController 
 @RequestMapping("api/directions")
 @RequiredArgsConstructor 
@@ -29,6 +35,9 @@ public class DirectionController {
     private final DirectionService directionService; 
 
 
+    @Operation (
+        summary = "Создать направление"
+    )
     @PostMapping 
     public ResponseEntity<DirectionResponse> createDirection(
         @Valid @RequestBody  CreateDirectionRequest request
@@ -41,6 +50,10 @@ public class DirectionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
+    @Operation (
+        summary = "Получить направление по ID"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<DirectionResponse> getDirectionById(@PathVariable("id") UUID id) {
 
@@ -51,6 +64,10 @@ public class DirectionController {
         return ResponseEntity.ok(response);
     }
 
+
+    @Operation (
+        summary = "Получить все направления"
+    )
     @GetMapping 
     public ResponseEntity<List<DirectionResponse>> getAllDirections() {
 

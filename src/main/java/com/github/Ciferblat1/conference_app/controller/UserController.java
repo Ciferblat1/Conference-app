@@ -17,10 +17,16 @@ import com.github.Ciferblat1.conference_app.dto.UserResponse;
 import com.github.Ciferblat1.conference_app.entity.User;
 import com.github.Ciferblat1.conference_app.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
+@Tag (
+    name = "Пользователи",
+    description = "Создание и получение пользователей"
+)
 @RestController 
 @RequiredArgsConstructor 
 @RequestMapping("api/users")
@@ -28,6 +34,10 @@ public class UserController {
     
     private final UserService userService;
 
+
+    @Operation (
+        summary = "Создание пользователя"
+    )
     @PostMapping 
     public ResponseEntity<UserResponse> createUser(
         @Valid  @RequestBody CreateUserRequest request
@@ -43,6 +53,9 @@ public class UserController {
     }
 
 
+    @Operation (
+        summary = "Получение пользователя по ID"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable("id") UUID id) {
 
@@ -55,6 +68,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+
+    @Operation (
+        summary = "Получение всех пользователей"
+    )
     @GetMapping 
     public ResponseEntity<List<UserResponse>> getAllUsers() {
 

@@ -20,10 +20,16 @@ import com.github.Ciferblat1.conference_app.dto.UpdateApplicationBodyRequest;
 import com.github.Ciferblat1.conference_app.entity.Application;
 import com.github.Ciferblat1.conference_app.service.ApplicationService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 
+@Tag(
+    name = "Заявки",
+    description = "Подача, получение, замена документа и отзыв заявок"
+)
 @RestController 
 @RequiredArgsConstructor 
 @RequestMapping("api/applications")
@@ -31,6 +37,10 @@ public class ApplicationController {
 
     private final ApplicationService applicationService;
     
+
+    @Operation(
+        summary = "Создать заявку"
+    )
     @PostMapping 
     public ResponseEntity<ApplicationResponse> createApplication(
         @Valid @ModelAttribute CreateApplicationRequest request
@@ -46,6 +56,9 @@ public class ApplicationController {
     }
 
 
+    @Operation(
+        summary = "Отозвать заявку"
+    )
     @PostMapping("{id}/withdraw")
     public ResponseEntity<ApplicationResponse> setWithdrowStatus(@PathVariable UUID id) {
 
@@ -57,6 +70,10 @@ public class ApplicationController {
     }
 
 
+
+    @Operation(
+        summary = "Получить все заявки"
+    )
     @GetMapping  
     public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
 
@@ -68,6 +85,11 @@ public class ApplicationController {
         return ResponseEntity.ok(response);
     }
 
+
+
+    @Operation(
+        summary = "Получить заявку по ID"
+    )
     @GetMapping("/{id}")
     public ResponseEntity<ApplicationResponse> getApplicationById(@PathVariable("id") UUID id) {
 
@@ -79,6 +101,14 @@ public class ApplicationController {
     }
 
 
+    @Operation(
+        summary = "Заменить документ заявки",
+        description = """
+                Принимает новый файл DOC или DOCX размером до 10 МиБ.
+                Замена разрешена до T1 для поданных и отозванных заявок.
+                Предыдущая версия не сохраняется, статус не изменяется.
+                """
+    )
     @PatchMapping("/{id}")
     public ResponseEntity<ApplicationResponse> updateApplicationBody(
         @PathVariable("id") UUID id, 
@@ -93,6 +123,7 @@ public class ApplicationController {
     }
 
 
+    
     private ApplicationResponse toResponse(Application application) {
         return new ApplicationResponse(
             application.getId(), 
