@@ -43,21 +43,16 @@ public class Application {
     @Column(name = "status", nullable = false)
     private ApplicationStatus status;
 
-    @Column(name = "body", nullable = false)
-    private String body;
-
-
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Application(User user, Direction direction, String body) {
+    public Application(User user, Direction direction) {
 
         this.author = user;
         this.direction = direction;
-        this.body = body;
         this.status = ApplicationStatus.SUBMITTED;
     }
 
@@ -74,11 +69,9 @@ public class Application {
         updatedAt = LocalDateTime.now();
     }
 
-
-    public void updateBody(String newBody) {
-        this.body = newBody;
+    public void markDocumentUpdated() {
+        updatedAt = LocalDateTime.now();
     }
-
 
     public void withdraw() {
         this.status = ApplicationStatus.WITHDRAWN;

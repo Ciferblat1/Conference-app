@@ -11,7 +11,6 @@ public record ApplicationResponse(
     UUID authorId,
     UUID directionId,
     ApplicationStatus status,
-    String body,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {

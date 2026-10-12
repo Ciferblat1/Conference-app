@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,13 +33,12 @@ public class ApplicationController {
     
     @PostMapping 
     public ResponseEntity<ApplicationResponse> createApplication(
-        @Valid @RequestBody CreateApplicationRequest request
+        @Valid @ModelAttribute CreateApplicationRequest request
     ) {
 
         Application application = applicationService.createApplication(
-            request.authorId(), request.directionId(), request.body()
+            request.getAuthorId(), request.getDirectionId(), request.getFile()
         );
-
 
         ApplicationResponse response = toResponse(application);
 
@@ -82,10 +82,10 @@ public class ApplicationController {
     @PatchMapping("/{id}")
     public ResponseEntity<ApplicationResponse> updateApplicationBody(
         @PathVariable("id") UUID id, 
-        @Valid @RequestBody  UpdateApplicationBodyRequest request
+        @Valid @ModelAttribute  UpdateApplicationBodyRequest request
     ) {
 
-        Application application = applicationService.updateApplicationBody(id, request.body());
+        Application application = applicationService.updateApplicationDocument(id, request.getFile());
 
         ApplicationResponse response = toResponse(application);
         
@@ -99,7 +99,6 @@ public class ApplicationController {
             application.getAuthor().getId(), 
             application.getDirection().getId(), 
             application.getStatus(), 
-            application.getBody(), 
             application.getCreatedAt(), 
             application.getUpdatedAt()
         );

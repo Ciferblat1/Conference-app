@@ -2,18 +2,25 @@ package com.github.Ciferblat1.conference_app.dto;
 
 import java.util.UUID;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import org.springframework.web.multipart.MultipartFile;
 
-public record CreateApplicationRequest(
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+
+@Getter 
+@Setter 
+@NoArgsConstructor 
+public class CreateApplicationRequest {
 
     @NotNull(message = "Автор обязателен")
-    UUID authorId, 
+    private UUID authorId;
 
     @NotNull(message = "Направление обязательно")
-    UUID directionId, 
+    private UUID directionId;
 
-    @NotBlank 
-    String body
-) {
+    @NotNull(message = "Файл обязателен")
+    private MultipartFile file;
 } 

@@ -1,13 +1,18 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.github.Ciferblat1.conference_app.entity.Application;
+import com.github.Ciferblat1.conference_app.entity.ApplicationDocument;
 import com.github.Ciferblat1.conference_app.entity.ApplicationStatus;
 import com.github.Ciferblat1.conference_app.entity.ConferenceSettings;
 import com.github.Ciferblat1.conference_app.entity.Direction;
@@ -16,8 +21,10 @@ import com.github.Ciferblat1.conference_app.exception.ApplicationDeadlinePassedE
 import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.ConferenceSettingsNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.DirectionNotFoundException;
+import com.github.Ciferblat1.conference_app.exception.DocumentNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.InvalidApplicationStateException;
 import com.github.Ciferblat1.conference_app.exception.UserNotFoundException;
+import com.github.Ciferblat1.conference_app.repository.ApplicationDocumentRepository;
 import com.github.Ciferblat1.conference_app.repository.ApplicationRepository;
 import com.github.Ciferblat1.conference_app.repository.ConferenceSettingsRepository;
 import com.github.Ciferblat1.conference_app.repository.DirectionRepository;
@@ -33,9 +40,10 @@ public class ApplicationService {
     private final UserRepository userRepository;
     private final DirectionRepository directionRepository;
     private final ConferenceSettingsRepository conferenceSettingsRepository;
+    private final ApplicationDocumentRepository applicationDocumentRepository;
 
     @Transactional 
-    public Application createApplication(UUID authorId, UUID directionId, String body) {
+    public Application createApplication(UUID authorId, UUID directionId, MultipartFile file) {
 
         if(authorId == null) {
             throw new IllegalArgumentException("ID автора не может быть null");
@@ -45,9 +53,7 @@ public class ApplicationService {
             throw new IllegalArgumentException("ID направления не может быть null");
         }
 
-        if(body == null || body.isBlank()) {
-            throw new IllegalArgumentException("Тело заявки не может быть пустым");
-        }
+        String contentType = checkFile(file);
 
         checkSubmissionDeadline();
 
@@ -57,9 +63,13 @@ public class ApplicationService {
         Direction direction = directionRepository.findById(directionId)
             .orElseThrow(() -> new DirectionNotFoundException(directionId));
 
-        Application application = new Application(author, direction, body);
+        byte[] content = readFileContent(file);
+
+        Application application = new Application(author, direction);
+        ApplicationDocument document = new ApplicationDocument(application, file.getOriginalFilename(), contentType, content);
 
         applicationRepository.save(application);
+        applicationDocumentRepository.save(document);
         return application;
     }
 
@@ -86,22 +96,25 @@ public class ApplicationService {
 
 
     @Transactional 
-    public Application updateApplicationBody(UUID id, String newBody) {
+    public Application updateApplicationDocument(UUID id, MultipartFile updatedFile) {
 
-        if(id == null || newBody == null) {
+        if(id == null) {
             throw new IllegalArgumentException("ID не может быть null");
         }
 
-        if (newBody == null || newBody.isBlank()) {
-            throw new IllegalArgumentException("Текст заявки не может быть пустым");
-        }
-
+        String contentType = checkFile(updatedFile);
         checkSubmissionDeadline();
 
         Application application = getApplicationById(id);
+        ApplicationDocument document = applicationDocumentRepository.findById(id)
+            .orElseThrow(() -> new DocumentNotFoundException(id));
 
-        if(application.getStatus() == ApplicationStatus.SUBMITTED) {
-            application.updateBody(newBody);
+        if(application.getStatus() == ApplicationStatus.SUBMITTED || 
+            application.getStatus() == ApplicationStatus.WITHDRAWN) 
+        {
+            byte[] content = readFileContent(updatedFile);
+            document.updateDocument(updatedFile.getOriginalFilename(), contentType, content);
+            application.markDocumentUpdated();
         }
         else {
             throw new InvalidApplicationStateException(id, application.getStatus());
@@ -145,4 +158,53 @@ public class ApplicationService {
             throw new ApplicationDeadlinePassedException();
         }
     }
+
+
+    private String checkFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Файл заявки обязателен");
+        }
+
+        long maxFileSize = 10L * 1024 * 1024;
+
+        if (file.getSize() > maxFileSize) {
+            throw new IllegalArgumentException("Размер файла не должен превышать 10 МиБ");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+
+        if (originalFilename == null
+            || originalFilename.isBlank()
+            || originalFilename.length() > 255) 
+        {
+            throw new IllegalArgumentException("Недопустимое имя файла");
+        }
+
+        String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
+        String contentType;
+
+        if(lowerFilename.endsWith(".docx")) {
+            contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        } 
+        else if(lowerFilename.endsWith(".doc")) {
+            contentType = "application/msword";
+        } 
+        else {
+            throw new IllegalArgumentException("Разрешены только файлы .doc и .docx");
+        }
+
+        return contentType;
+    }
+
+
+    private byte[] readFileContent(MultipartFile file) {
+    try {
+        return file.getBytes();
+    } catch (IOException exception) {
+        throw new UncheckedIOException(
+                "Не удалось прочитать файл",
+                exception
+        );
+    }
+}
 }

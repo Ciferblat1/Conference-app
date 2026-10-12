@@ -92,4 +92,14 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+
+    @ExceptionHandler(DocumentNotFoundException.class)
+    public ProblemDetail handleDocumentNotFound(DocumentNotFoundException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+
+        problem.setTitle("Документ не найден");
+
+        return problem;
+    }
 }
