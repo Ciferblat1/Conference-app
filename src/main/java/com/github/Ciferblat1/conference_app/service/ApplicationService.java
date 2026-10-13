@@ -101,7 +101,6 @@ public class ApplicationService {
     public List<Application> getAllApplications() {
 
         return  applicationRepository.findAll();
-
     }
 
 
