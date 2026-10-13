@@ -145,7 +145,6 @@ public class ApplicationService {
         {
             byte[] content = readFileContent(updatedFile);
             document.updateDocument(updatedFile.getOriginalFilename(), contentType, content);
-            application.submit();
             application.onUpdate();
         }
         else {
