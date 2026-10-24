@@ -15,8 +15,6 @@ import lombok.Setter;
 @NoArgsConstructor 
 public class CreateApplicationRequest {
 
-    @NotNull(message = "Автор обязателен")
-    private UUID authorId;
 
     @NotNull(message = "Направление обязательно")
     private UUID directionId;

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -17,6 +18,7 @@ import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
 import com.github.Ciferblat1.conference_app.dto.CreateApplicationRequest;
 import com.github.Ciferblat1.conference_app.dto.UpdateApplicationBodyRequest;
 import com.github.Ciferblat1.conference_app.entity.Application;
+import com.github.Ciferblat1.conference_app.security.AppUserDetails;
 import com.github.Ciferblat1.conference_app.service.ApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,11 +44,12 @@ public class ApplicationController {
     )
     @PostMapping 
     public ResponseEntity<ApplicationResponse> createApplication(
+        @AuthenticationPrincipal AppUserDetails principal,
         @Valid @ModelAttribute CreateApplicationRequest request
     ) {
 
         Application application = applicationService.createApplication(
-            request.getAuthorId(), request.getDirectionId(), request.getFile()
+            principal.getId(), request.getDirectionId(), request.getFile()
         );
 
         ApplicationResponse response = toResponse(application);
