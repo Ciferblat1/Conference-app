@@ -36,10 +36,13 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role;
 
+    @Column(name = "password_hash", nullable = false, length = 255)
+    private String passwordHash;
 
-    public User(String email, String fullname, UserRole role) {
+    public User(String email, String fullname, UserRole role, String passwordHash) {
         this.email = email;
         this.fullname = fullname;
         this.role = role;
+        this.passwordHash = passwordHash;
     }
 }

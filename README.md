@@ -117,6 +117,7 @@ Windows PowerShell:
 | `docker compose down` | Удалить контейнеры и сеть, сохранив данные базы в volume |
 | `docker compose pull postgres` | Скачать актуальный образ в рамках тега `postgres:17-alpine`; для применения затем выполнить `docker compose up -d` |
 | `docker volume ls` | Посмотреть Docker volumes |
+| `docker compose down -v` | Сбросить базу данных |
 
 
 ### Подключение к базе не через Docker
