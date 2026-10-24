@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^9.7.2",
+    "@mantine/hooks": "^9.7.2",
+    "@mantine/notifications": "^9.7.2",
     "@tanstack/react-query": "^5.104.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
