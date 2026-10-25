@@ -1,4 +1,5 @@
 import { useDirections } from '../hooks/useDirections';
+import UserBar from './UserBar';
 
 export default function DirectionList() {
 
@@ -13,11 +14,14 @@ export default function DirectionList() {
   }
 
   return(
-    <ul>
-        {directions.map(direction => (
-            <li key={direction.id}>{direction.title}</li>
-        ))}
-    </ul>
+    <div>
+      <UserBar/>
+      <ul>
+          {directions.map(direction => (
+              <li key={direction.id}>{direction.title}</li>
+          ))}
+      </ul>
+    </div>
   )
 }
 
