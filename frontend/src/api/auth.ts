@@ -10,7 +10,8 @@ export async function register(data: RegisterRequest): Promise<UserResponse> {
     });
 
     if(!response.ok) {
-        throw new Error(`Не удалось зарегистрироваться: ${response.status}`)
+        const problem = await response.json().catch(() => null);
+        throw new Error(problem?.detail ?? `Не удалось зарегистрироваться: ${response.status}`)
     }
 
     return response.json();
