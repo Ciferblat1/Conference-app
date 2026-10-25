@@ -1,13 +1,8 @@
-import {useQuery} from '@tanstack/react-query'
-
-import {getDirections} from '../api/directions'
+import { useDirections } from '../hooks/useDirections';
 
 export default function DirectionList() {
 
-    const {data: directions = [], isPending, isError, error} = useQuery({
-    queryKey: ['directions'],
-    queryFn: getDirections,
-  })
+  const {data: directions = [], isPending, isError, error} = useDirections()
 
   if(isPending) {
     return <p>Загрузка направлений</p>
