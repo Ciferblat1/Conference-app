@@ -305,12 +305,13 @@ public class ApplicationServiceTest {
         configureDeadline(false);
 
         UUID id = UUID.randomUUID();
-        Application application = createMockApplication();
+        UUID userId = UUID.randomUUID();
+        Application application = createApplicationWithAuthor(userId);
 
         when(applicationRepository.findById(id))
                 .thenReturn(Optional.of(application));
 
-        Application result = applicationService.setWithdrawStatus(id);
+        Application result = applicationService.setWithdrawStatus(id, userId);
 
         assertSame(application, result);
         assertEquals(ApplicationStatus.WITHDRAWN, result.getStatus());
@@ -326,8 +327,9 @@ public class ApplicationServiceTest {
         configureDeadline(false);
 
         UUID id = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        Application application = createApplicationWithAuthor(userId);
 
-        Application application = createMockApplication();
         application.withdraw();
 
         LocalDateTime previousCreatedAt = application.getCreatedAt();
@@ -349,7 +351,8 @@ public class ApplicationServiceTest {
 
         Application result = applicationService.updateApplicationDocument(
                 id,
-                newFile
+                newFile,
+                userId
         );
 
         assertSame(application, result);
@@ -362,7 +365,7 @@ public class ApplicationServiceTest {
         );
         assertArrayEquals(new byte[] {1, 2, 3}, document.getContent());
 
-        assertEquals(ApplicationStatus.SUBMITTED, application.getStatus());
+        assertEquals(ApplicationStatus.WITHDRAWN, application.getStatus());
         assertEquals(previousCreatedAt, application.getCreatedAt());
         assertNotNull(application.getUpdatedAt());
 
@@ -408,8 +411,11 @@ public class ApplicationServiceTest {
     }
 
 
-    private Application createMockApplication() {
-        return new Application(mock(User.class), mock(Direction.class));
+    private Application createApplicationWithAuthor(UUID authorId) {
+        User author = mock(User.class);
+        when(author.getId()).thenReturn(authorId);
+
+        return new Application(author, mock(Direction.class));
     }
 
     private enum Operation {
@@ -429,8 +435,8 @@ public class ApplicationServiceTest {
                 UUID.randomUUID(),
                 file
             );
-            case UPDATE -> applicationService.updateApplicationDocument(id, file);
-            case WITHDRAW -> applicationService.setWithdrawStatus(id);
+            case UPDATE -> applicationService.updateApplicationDocument(id, file, UUID.randomUUID());
+            case WITHDRAW -> applicationService.setWithdrawStatus(id, UUID.randomUUID());
         }
     }
 }

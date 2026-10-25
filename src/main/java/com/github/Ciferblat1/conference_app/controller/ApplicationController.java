@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -37,11 +38,11 @@ import lombok.RequiredArgsConstructor;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
-    
 
     @Operation(
         summary = "Создать заявку"
     )
+    @PreAuthorize("hasRole('PARTICIPANT')")
     @PostMapping 
     public ResponseEntity<ApplicationResponse> createApplication(
         @AuthenticationPrincipal AppUserDetails principal,
@@ -61,10 +62,14 @@ public class ApplicationController {
     @Operation(
         summary = "Отозвать заявку"
     )
+    @PreAuthorize("hasRole('PARTICIPANT')")
     @PostMapping("{id}/withdraw")
-    public ResponseEntity<ApplicationResponse> setWithdrowStatus(@PathVariable UUID id) {
+    public ResponseEntity<ApplicationResponse> setWithdrowStatus(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @PathVariable UUID id
+    ) {
 
-        Application application = applicationService.setWithdrawStatus(id);
+        Application application = applicationService.setWithdrawStatus(id, principal.getId());
 
         ApplicationResponse response = toResponse(application);
 
@@ -72,10 +77,29 @@ public class ApplicationController {
     }
 
 
+    @Operation(
+        summary = "Получить заявки текущего пользователя"
+    )
+    @PreAuthorize("hasRole('PARTICIPANT')")
+    @GetMapping("/me")
+    public ResponseEntity<List<ApplicationResponse>> getMyApplications(
+        @AuthenticationPrincipal AppUserDetails principal
+    ) {
+
+        List<Application> applications = applicationService.getApplicationByAuthorId(principal.getId());
+
+        List<ApplicationResponse> response = applications.stream()
+            .map(application -> toResponse(application))
+            .toList();
+
+        return ResponseEntity.ok(response);
+    }
+
 
     @Operation(
         summary = "Получить все заявки"
     )
+    @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping  
     public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
 
@@ -111,13 +135,15 @@ public class ApplicationController {
                 Предыдущая версия не сохраняется, статус не изменяется.
                 """
     )
+    @PreAuthorize("hasRole('PARTICIPANT')")
     @PatchMapping("/{id}")
     public ResponseEntity<ApplicationResponse> updateApplicationBody(
         @PathVariable("id") UUID id, 
-        @Valid @ModelAttribute  UpdateApplicationBodyRequest request
+        @Valid @ModelAttribute  UpdateApplicationBodyRequest request,
+        @AuthenticationPrincipal AppUserDetails principal
     ) {
 
-        Application application = applicationService.updateApplicationDocument(id, request.getFile());
+        Application application = applicationService.updateApplicationDocument(id, request.getFile(), principal.getId());
 
         ApplicationResponse response = toResponse(application);
         

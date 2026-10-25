@@ -1,6 +1,8 @@
 ### Environment variables with secrets ###
 .env
 
+cookies.txt
+
 HELP.md
 .gradle
 build/

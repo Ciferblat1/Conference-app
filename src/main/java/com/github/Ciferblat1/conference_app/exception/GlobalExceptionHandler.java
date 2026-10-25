@@ -102,4 +102,14 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+    @ExceptionHandler(ApplicationAccessDeniedException.class)
+    public ProblemDetail handleApplicationAccessDeniedException(ApplicationAccessDeniedException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+
+        problem.setTitle("Нет доступа к заявке");
+
+        return problem;
+    }
 }

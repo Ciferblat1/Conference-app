@@ -17,6 +17,7 @@ import com.github.Ciferblat1.conference_app.entity.ApplicationStatus;
 import com.github.Ciferblat1.conference_app.entity.ConferenceSettings;
 import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.entity.User;
+import com.github.Ciferblat1.conference_app.exception.ApplicationAccessDeniedException;
 import com.github.Ciferblat1.conference_app.exception.ApplicationDeadlinePassedException;
 import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
 import com.github.Ciferblat1.conference_app.exception.ConferenceSettingsNotFoundException;
@@ -114,6 +115,16 @@ public class ApplicationService {
         return applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
     }
 
+    @Transactional(readOnly = true)
+    public List<Application> getApplicationByAuthorId(UUID id) {
+
+        if(id == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        return applicationRepository.findByAuthorId(id);
+    }
+
 
     /**
     * Заменяет документ заявки без сохранения предыдущей версии.
@@ -128,7 +139,9 @@ public class ApplicationService {
     * @return заявка после замены документа
     */
     @Transactional 
-    public Application updateApplicationDocument(UUID id, MultipartFile updatedFile) {
+    public Application updateApplicationDocument(
+        UUID id, MultipartFile updatedFile, UUID currentUserId
+    ) {
 
         if(id == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -138,6 +151,9 @@ public class ApplicationService {
         checkSubmissionDeadline();
 
         Application application = getApplicationById(id);
+
+        checkAuthor(application, currentUserId);
+
         ApplicationDocument document = applicationDocumentRepository.findById(id)
             .orElseThrow(() -> new DocumentNotFoundException(id));
 
@@ -156,7 +172,7 @@ public class ApplicationService {
 
 
     @Transactional 
-    public Application setWithdrawStatus(UUID id) {
+    public Application setWithdrawStatus(UUID id, UUID currentUserId) {
 
         if(id == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -165,6 +181,8 @@ public class ApplicationService {
         checkSubmissionDeadline();
 
         Application application = getApplicationById(id);
+
+        checkAuthor(application, currentUserId);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED) {
             application.withdraw();
@@ -254,6 +272,13 @@ public class ApplicationService {
             return file.getBytes();
         } catch (IOException exception) {
             throw new UncheckedIOException("Не удалось прочитать файл", exception);
+        }
+    }
+
+
+    private void checkAuthor(Application application, UUID currentId) {
+        if(!application.getAuthor().getId().equals(currentId)) {
+            throw new ApplicationAccessDeniedException(application.getId());
         }
     }
 }

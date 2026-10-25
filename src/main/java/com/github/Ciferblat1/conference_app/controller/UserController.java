@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +35,7 @@ public class UserController {
     @Operation (
         summary = "Получение пользователя по ID"
     )
+    @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable("id") UUID id) {
 
@@ -50,6 +52,7 @@ public class UserController {
     @Operation (
         summary = "Получение всех пользователей"
     )
+    @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping 
     public ResponseEntity<List<UserResponse>> getAllUsers() {
 
