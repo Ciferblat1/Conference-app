@@ -1,38 +1,20 @@
-import {useQuery} from '@tanstack/react-query'
 
-import {getDirections} from './api/directions'
+import { Routes, Route } from 'react-router';
 
 import './App.css'
 
+import DirectionsPage from './pages/DirectionsPage'
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+
 function App() {
 
-  const {data: directions = [], isPending, isError, error} = useQuery({
-    queryKey: ['directions'],
-    queryFn: getDirections,
-  })
-
-  if(isPending) {
-    return <p>Загрузка направлений</p>
-  }
-
-  if(isError) {
-    return <p role="alert">{error.message}</p>
-  }
-
   return (
-    <main>
-      <h1>направления конференции</h1>
-
-      {directions.length === 0 ? (
-        <p>направлений пока нет</p>
-      ): (
-        <ul>
-          {directions.map(direction => (
-            <li key={direction.id}>{direction.title}</li>
-          ))}
-        </ul>
-      )}
-    </main>
+    <Routes>
+      <Route path="/" element={<DirectionsPage/>}/>
+      <Route path="/register" element={<RegisterPage/>}/>
+      <Route path="/login" element={<LoginPage/>}/>
+    </Routes>
   )
 }
 
