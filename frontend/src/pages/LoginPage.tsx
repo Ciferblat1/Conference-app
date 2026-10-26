@@ -19,7 +19,7 @@ export default function LoginPage() {
     const mutation = useMutation({
         mutationFn: login,
         onSuccess: async () => {
-            await queryClient.invalidateQueries({queryKey: ['me']})
+            await queryClient.invalidateQueries({queryKey: ['me'], refetchType: 'all'})
             notifications.show({message: 'Вход прошёл успешно'})
             navigate("/")
         }

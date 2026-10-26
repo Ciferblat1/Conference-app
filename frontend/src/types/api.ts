@@ -29,3 +29,16 @@ export interface UserResponse {
     fullname: string,
     role: UserRole
 }
+
+
+export interface ApplicationResponse {
+    id: string, 
+    authorId: string, 
+    directionId: string, 
+    status: ApplicationStatus, 
+    createdAt: string, 
+    updatedAt: string
+}
+
+
+export type ApplicationStatus = 'SUBMITTED' | 'APPROVED' | 'WITHDRAWN'

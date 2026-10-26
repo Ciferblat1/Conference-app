@@ -15,6 +15,7 @@ export default function UserBar() {
         mutationFn: logout,
         onSuccess: () => {
             queryClient.setQueryData(['me'], null)
+            queryClient.removeQueries({queryKey: ['applications']})
             navigate('/login')
         },
     })
@@ -24,7 +25,7 @@ export default function UserBar() {
     }
 
     return (
-        <Group justify="space-between" mt="md">
+        <Group justify="space-between">
             <Text>{user.fullname} ({user.role})</Text>
 
             <Button variant="default" loading={mutation.isPending} onClick={() => mutation.mutate()}>

@@ -1,5 +1,5 @@
+import { Stack, Text } from '@mantine/core';
 import { useDirections } from '../hooks/useDirections';
-import UserBar from './UserBar';
 
 export default function DirectionList() {
 
@@ -13,15 +13,16 @@ export default function DirectionList() {
     return <p role="alert">{error.message}</p>
   }
 
+  if(directions.length === 0) {
+    return <Text ta="center" c="dimmed">Направлений пока нет</Text>
+  }
+
   return(
-    <div>
-      <UserBar/>
-      <ul>
-          {directions.map(direction => (
-              <li key={direction.id}>{direction.title}</li>
-          ))}
-      </ul>
-    </div>
+    <Stack align="center" gap="xs">
+      {directions.map(direction => (
+        <Text key={direction.id}>{direction.title}</Text>
+      ))}
+    </Stack>
   )
 }
 
