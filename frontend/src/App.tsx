@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import RequireAuth from './components/RequireAuth';
 import MyApplicationsPage from './pages/MyApplicationsPage';
+import CreateApplicationPage from './pages/CreateApplicationPage';
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
       <Route path="/register" element={<RegisterPage/>}/>
       <Route path="/login" element={<LoginPage/>}/>
       <Route element={<RequireAuth/>}>
+        <Route path="/applications/new" element={<CreateApplicationPage/>}/>
         <Route path="/" element={<MyApplicationsPage/>}/>
         <Route path="/directions" element={<DirectionsPage/>}/>
       </Route>

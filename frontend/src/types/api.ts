@@ -40,5 +40,10 @@ export interface ApplicationResponse {
     updatedAt: string
 }
 
+export interface ApplicationCreateRequest {
+    directionId: string,
+    file: File
+}
+
 
 export type ApplicationStatus = 'SUBMITTED' | 'APPROVED' | 'WITHDRAWN'
