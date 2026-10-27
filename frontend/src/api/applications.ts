@@ -31,3 +31,17 @@ export async function createApplication(data: ApplicationCreateRequest): Promise
 
     return response.json();
 }
+
+
+export async function withdrawApplication(id: string): Promise<ApplicationResponse> {
+
+    const response = await fetch("/api/applications/" + id + "/withdraw", {
+        method: "POST"
+    })
+    
+    if(!response.ok) {
+        throw new Error(`Не удалось отозвать заявку: ${response.status}`)
+    }
+
+    return response.json()
+}

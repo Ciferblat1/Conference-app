@@ -50,6 +50,7 @@ export async function logout(): Promise<void> {
 }
 
 
+//Получить текущего пользователя
 export async function getMe(): Promise<UserResponse | null> {
     const response = await fetch("/api/auth/me");
 
