@@ -8,12 +8,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.Ciferblat1.conference_app.entity.ParticipantProfile;
 import com.github.Ciferblat1.conference_app.entity.User;
 import com.github.Ciferblat1.conference_app.entity.UserRole;
 import com.github.Ciferblat1.conference_app.exception.EmailAlreadyExistsException;
 import com.github.Ciferblat1.conference_app.exception.UserNotFoundException;
-import com.github.Ciferblat1.conference_app.repository.ParticipantProfileRepository;
 import com.github.Ciferblat1.conference_app.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
     
     private final UserRepository userRepository;
-    private final ParticipantProfileRepository participantProfileRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional 
@@ -50,11 +47,8 @@ public class UserService {
             passwordEncoder.encode(password)
         );
 
-        ParticipantProfile profile = new ParticipantProfile(
-            user, "", "", "", "", mormalisedEmail, null);
 
         userRepository.save(user);
-        participantProfileRepository.save(profile);
         return user;
     }
 

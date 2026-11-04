@@ -70,4 +70,21 @@ public class ParticipantProfile {
         this.phone = phone;
         this.fundingType = fundingType;
     }
+
+
+    public void updateDetails(
+        String firstName, 
+        String surname, 
+        String patronymic, 
+        String groupName, 
+        String phone, 
+        FundingType fundingType
+    ) {
+        this.firstName = firstName;
+        this.surname = surname;
+        this.patronymic = patronymic;
+        this.groupName = groupName;
+        this.phone = phone;
+        this.fundingType = fundingType;
+    }
 }

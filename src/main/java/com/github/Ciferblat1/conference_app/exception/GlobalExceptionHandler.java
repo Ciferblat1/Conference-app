@@ -112,4 +112,16 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+
+    
+
+    @ExceptionHandler(ParticipantProfileNotFoundException.class)
+    public ProblemDetail handleParticipantProfileNotFoundException(ParticipantProfileNotFoundException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+
+        problem.setTitle("Профиль не найден");
+
+        return problem;
+    }
 }
