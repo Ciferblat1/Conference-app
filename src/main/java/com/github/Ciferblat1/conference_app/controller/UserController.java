@@ -42,7 +42,7 @@ public class UserController {
         User user = userService.getUserById(id);
 
         UserResponse response = new UserResponse(
-            user.getId(), user.getEmail(), user.getFullname(), user.getRole()
+            user.getId(), user.getEmail(), user.getAlias(), user.getRole()
         );
 
         return ResponseEntity.ok(response);
@@ -62,7 +62,7 @@ public class UserController {
             .map(user -> new UserResponse(
                 user.getId(), 
                 user.getEmail(), 
-                user.getFullname(), 
+                user.getAlias(), 
                 user.getRole())).toList();
 
         return ResponseEntity.ok(response);

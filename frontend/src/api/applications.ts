@@ -1,6 +1,6 @@
 import type {ApplicationCreateRequest, ApplicationResponse} from '../types/api'
 
-
+//Получить заявки
 export async function getApplications(): Promise<ApplicationResponse[]> {
 
     const response = await fetch("/api/applications/me")
@@ -13,6 +13,7 @@ export async function getApplications(): Promise<ApplicationResponse[]> {
 }
 
 
+//Создать заявку
 export async function createApplication(data: ApplicationCreateRequest): Promise<ApplicationResponse> {
     
     const formData = new FormData();
@@ -33,6 +34,7 @@ export async function createApplication(data: ApplicationCreateRequest): Promise
 }
 
 
+//Отозвать заявку
 export async function withdrawApplication(id: string): Promise<ApplicationResponse> {
 
     const response = await fetch("/api/applications/" + id + "/withdraw", {

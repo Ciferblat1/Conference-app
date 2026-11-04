@@ -12,7 +12,7 @@ public record RegisterRequest(
 
     @Size(max = 255, message = "имя должно быть не длиннее 255 символов")
     @NotBlank 
-    String fullname,
+    String alias,
 
     @NotBlank 
     @Size(min = 8, max = 72, message = "Пароль должен быть от 8 до 72 символов")

@@ -29,10 +29,10 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest  request) {
 
-        User user = userService.register(request.email(), request.fullname(), request.password());
+        User user = userService.register(request.email(), request.alias(), request.password());
 
         UserResponse response = new UserResponse(
-            user.getId(), user.getEmail(), user.getFullname(), user.getRole()
+            user.getId(), user.getEmail(), user.getAlias(), user.getRole()
         );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -45,7 +45,7 @@ public class AuthController {
         User user = userService.getUserById(principal.getId());
 
         UserResponse response = new UserResponse(
-            user.getId(), user.getEmail(), user.getFullname(), user.getRole()
+            user.getId(), user.getEmail(), user.getAlias(), user.getRole()
         );
 
         return ResponseEntity.ok(response);

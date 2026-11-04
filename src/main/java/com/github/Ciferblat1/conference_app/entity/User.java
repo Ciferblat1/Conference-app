@@ -29,8 +29,8 @@ public class User {
     @Column(name = "email", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "fullname", nullable = false)
-    private String fullname;
+    @Column(name = "alias", nullable = false)
+    private String alias;
 
     @Column(name = "role", nullable = false, length = 50)
     @Enumerated(EnumType.STRING)
@@ -39,9 +39,9 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    public User(String email, String fullname, UserRole role, String passwordHash) {
+    public User(String email, String alias, UserRole role, String passwordHash) {
         this.email = email;
-        this.fullname = fullname;
+        this.alias = alias;
         this.role = role;
         this.passwordHash = passwordHash;
     }
