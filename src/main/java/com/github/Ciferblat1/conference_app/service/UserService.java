@@ -44,7 +44,8 @@ public class UserService {
             mormalisedEmail, 
             fullname.trim(), 
             UserRole.PARTICIPANT, 
-            passwordEncoder.encode(password)
+            passwordEncoder.encode(password),
+            null
         );
 
 

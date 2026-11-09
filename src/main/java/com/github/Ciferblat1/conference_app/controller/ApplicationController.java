@@ -97,11 +97,11 @@ public class ApplicationController {
         @AuthenticationPrincipal AppUserDetails principal
     ) {
 
-        List<Application> applications = applicationService.getApplicationByAuthorId(principal.getId());
+        List<Application> applications = applicationService.getApplicationsByAuthorId(principal.getId());
 
         List<ApplicationResponse> response = applications.stream()
             .map(application -> toResponse(application))
-            .toList();
+                .toList();
 
         return ResponseEntity.ok(response);
     }
@@ -112,9 +112,11 @@ public class ApplicationController {
     )
     @PreAuthorize("hasRole('ORGANIZER')")
     @GetMapping  
-    public ResponseEntity<List<ApplicationResponse>> getAllApplications() {
+    public ResponseEntity<List<ApplicationResponse>> getAllApplications(
+        @AuthenticationPrincipal AppUserDetails principal
+    ) {
 
-        List<Application> applications = applicationService.getAllApplications();
+        List<Application> applications = applicationService.getAllApplications(principal.getId());
 
         List<ApplicationResponse> response = applications.stream()
             .map(application -> toResponse(application)).toList();

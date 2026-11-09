@@ -39,10 +39,14 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
 
-    public User(String email, String alias, UserRole role, String passwordHash) {
+    @Column(name = "direction_id", nullable = true)
+    private UUID directionId;
+
+    public User(String email, String alias, UserRole role, String passwordHash, UUID directionId) {
         this.email = email;
         this.alias = alias;
         this.role = role;
         this.passwordHash = passwordHash;
+        this.directionId = directionId;
     }
 }

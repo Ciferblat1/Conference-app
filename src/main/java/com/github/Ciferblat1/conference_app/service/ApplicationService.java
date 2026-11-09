@@ -15,6 +15,7 @@ import com.github.Ciferblat1.conference_app.entity.ConferenceSettings;
 import com.github.Ciferblat1.conference_app.entity.Direction;
 import com.github.Ciferblat1.conference_app.entity.ParticipantProfile;
 import com.github.Ciferblat1.conference_app.entity.User;
+import com.github.Ciferblat1.conference_app.entity.UserRole;
 import com.github.Ciferblat1.conference_app.exception.ApplicationAccessDeniedException;
 import com.github.Ciferblat1.conference_app.exception.ApplicationDeadlinePassedException;
 import com.github.Ciferblat1.conference_app.exception.ApplicationNotFoundException;
@@ -80,9 +81,12 @@ public class ApplicationService {
 
 
     @Transactional(readOnly = true)
-    public List<Application> getAllApplications() {
+    public List<Application> getAllApplications(UUID userId) {
 
-        return  applicationRepository.findAll();
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId));
+
+        return  applicationRepository.findByDirectionId(user.getDirectionId());
     }
 
 
@@ -95,13 +99,15 @@ public class ApplicationService {
 
         Application application = applicationRepository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
 
-        checkAuthor(application, userId);
-
+        checkUser(application, userId);
+        
         return application;
     }
 
+
+
     @Transactional(readOnly = true)
-    public List<Application> getApplicationByAuthorId(UUID id) {
+    public List<Application> getApplicationsByAuthorId(UUID id) {
 
         if(id == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -159,7 +165,7 @@ public class ApplicationService {
             }
 
             checkAuthor(application, userId);
-
+            
             ApplicationAuthorSnapshot snapshot = 
                 refreshAuthorSnapshot ? createSnapshot(userId) : application.getAuthorSnapshot();
 
@@ -212,7 +218,27 @@ public class ApplicationService {
 
     //Проверить, является ли пользователь автором заявки
     private void checkAuthor(Application application, UUID currentId) {
-        if(!application.getAuthor().getId().equals(currentId)) {
+
+        boolean isAuthor = application.getAuthor().getId().equals(currentId);
+
+        if(!isAuthor) {
+            throw new ApplicationAccessDeniedException(application.getId());
+        }
+    }
+
+    //Проверить, является ли пользователь автором заявки или организатором направления
+    private void checkUser(Application application, UUID currentId) {
+
+        boolean isAuthor = application.getAuthor().getId().equals(currentId);
+
+        User user = userRepository.findById(currentId).orElseThrow(() -> new UserNotFoundException(currentId));
+
+        boolean isOrganizerForDirection = 
+            user.getRole() == UserRole.ORGANIZER 
+            && user.getDirectionId().equals(application.getDirection().getId());
+
+
+        if(!isAuthor && !isOrganizerForDirection) {
             throw new ApplicationAccessDeniedException(application.getId());
         }
     }

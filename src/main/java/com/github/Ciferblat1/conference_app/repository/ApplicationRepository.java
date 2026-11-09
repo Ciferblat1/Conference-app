@@ -9,4 +9,6 @@ import com.github.Ciferblat1.conference_app.entity.Application;
 public interface ApplicationRepository extends JpaRepository<Application, UUID>{
 
     public List<Application> findByAuthorId(UUID authotId);
+
+    public List<Application> findByDirectionId(UUID directionId);
 }
