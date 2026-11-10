@@ -117,6 +117,21 @@ public class ApplicationService {
     }
 
 
+    @Transactional 
+    public List<Application> getApplicationsForExpert(UUID expertId) {
+        
+        if(expertId == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        User user = userRepository.findById(expertId).orElseThrow(() -> new UserNotFoundException(expertId));
+
+        if(user.getRole() != UserRole.EXPERT) {
+            throw new ApplicationAccessDeniedException(expertId);
+        }
+
+        return applicationRepository.findByDirectionId(user.getDirectionId());
+    }
 
 
 
@@ -143,7 +158,6 @@ public class ApplicationService {
         return application;
     }
 
-    
 
 
     @Transactional 

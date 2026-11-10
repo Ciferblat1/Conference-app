@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.Ciferblat1.conference_app.dto.ApplicationExpertResponse;
 import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
 import com.github.Ciferblat1.conference_app.dto.AuthorSnapshotResponse;
 import com.github.Ciferblat1.conference_app.dto.CreateApplicationRequest;
@@ -171,6 +172,8 @@ public class ApplicationController {
 
 
 
+    //===============================МОДЕРАЦИЯ ЗАЯВОК ОРГАНИЗАТОРОМ НАПРАВЛЕНИЯ===============================
+
     @PreAuthorize("hasRole('ORGANIZER')")
     @PostMapping("{id}/approve")
     public ResponseEntity<ApplicationResponse> setApprovedStatus(
@@ -217,9 +220,28 @@ public class ApplicationController {
     }
 
 
+    //===============================ВАИМОДЕЙСТВИЕ ЭКСПЕРТА С ЗАЯВКАМИ===============================
+
+    @PreAuthorize("hasRole('EXPERT')")
+    @GetMapping("/expert")
+    public ResponseEntity<List<ApplicationExpertResponse>> getAllApplicationsForExpert(
+        @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        List<Application> applications = applicationService.getApplicationsForExpert(principal.getId());
+
+        List<ApplicationExpertResponse> response = applications.stream()
+            .map(application -> toExpertResponse(application)).toList();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    //===============================ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ===============================
+
+
     //Преобразовать сущность заявки в ответ заявки
     private ApplicationResponse toResponse(Application application) {
-    return new ApplicationResponse(
+        return new ApplicationResponse(
             application.getId(),
             application.getAuthor().getId(),
             application.getDirection().getId(),
@@ -234,8 +256,22 @@ public class ApplicationController {
             application.getCreatedAt(),
             application.getUpdatedAt(),
             application.getExplanation()
-    );
-}
+        );
+    }
+
+    //Преобразовать сущность заявки в ответ заявки для эксперта (без личных данных)
+    private ApplicationExpertResponse toExpertResponse(Application application) {
+        return new ApplicationExpertResponse(
+            application.getId(),
+            application.getDirection().getId(),
+            application.getTitle(),
+            application.getTheses(),
+            List.copyOf(application.getReferencesList()),
+            application.getStatus(),
+            application.getCreatedAt(),
+            application.getUpdatedAt()
+        );
+    }
 
     //Преобразовать снапшот данных автора в ответ снапшота
     private AuthorSnapshotResponse toAuthorSnapshotResponse(
