@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
 import com.github.Ciferblat1.conference_app.dto.AuthorSnapshotResponse;
 import com.github.Ciferblat1.conference_app.dto.CreateApplicationRequest;
+import com.github.Ciferblat1.conference_app.dto.RevisionRequest;
 import com.github.Ciferblat1.conference_app.dto.SupervisorRequest;
 import com.github.Ciferblat1.conference_app.dto.SupervisorResponse;
 import com.github.Ciferblat1.conference_app.dto.UpdateApplicationRequest;
@@ -170,6 +171,50 @@ public class ApplicationController {
 
 
 
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("{id}/approve")
+    public ResponseEntity<ApplicationResponse> setApprovedStatus(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @PathVariable UUID id
+    ) {
+
+        Application application = applicationService.setApprovedStatus(id, principal.getId());
+
+        ApplicationResponse response = toResponse(application);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("{id}/reject")
+    public ResponseEntity<ApplicationResponse> setRejectedStatus(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @PathVariable UUID id
+    ) {
+
+        Application application = applicationService.setRejectedStatus(id, principal.getId());
+
+        ApplicationResponse response = toResponse(application);
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PostMapping("{id}/revision")
+    public ResponseEntity<ApplicationResponse> setRevisionStatus(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @Valid @RequestBody RevisionRequest request,
+        @PathVariable UUID id
+    ) {
+
+        Application application = applicationService.setRevisionStatus(id, principal.getId(), request.explanation());
+
+        ApplicationResponse response = toResponse(application);
+
+        return ResponseEntity.ok(response);
+    }
 
 
     //Преобразовать сущность заявки в ответ заявки
@@ -187,7 +232,8 @@ public class ApplicationController {
             List.copyOf(application.getReferencesList()),
             application.getStatus(),
             application.getCreatedAt(),
-            application.getUpdatedAt()
+            application.getUpdatedAt(),
+            application.getExplanation()
     );
 }
 

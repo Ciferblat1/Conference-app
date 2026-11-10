@@ -9,6 +9,7 @@ public record UserResponse(
     UUID id,
     String email,
     String alias,
-    UserRole role
+    UserRole role,
+    UUID directionId
 ) {
 } 

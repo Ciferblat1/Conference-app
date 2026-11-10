@@ -82,6 +82,9 @@ public class Application {
     @Column(name = "status", nullable = false)
     private ApplicationStatus status;
 
+    @Column(name = "explanation", nullable = true)
+    private String explanation;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -97,7 +100,8 @@ public class Application {
         List<ApplicationSupervisor> supervisors,
         String title,
         String theses,
-        List<String> referencesList
+        List<String> referencesList,
+        String explanation
     ) {
 
         this.author = user;
@@ -108,6 +112,7 @@ public class Application {
         this.referencesList = referencesList == null ? List.of() : new ArrayList<>(referencesList);
         this.title = title;
         this.theses = theses;
+        this.explanation = explanation;
     }
 
 
@@ -125,6 +130,7 @@ public class Application {
         this.referencesList = referencesList == null ? List.of() : new ArrayList<>(referencesList);
         this.title = title;
         this.theses = theses;
+        this.explanation = null;
     }
 
 
@@ -142,6 +148,19 @@ public class Application {
 
     public void withdraw() {
         this.status = ApplicationStatus.WITHDRAWN;
+    }
+
+    public void approve() {
+        this.status = ApplicationStatus.APPROVED;
+    }
+
+    public void reject() {
+        this.status = ApplicationStatus.REJECTED;
+    }
+
+    public void toRevision(String explanation) {
+        this.status = ApplicationStatus.REVISION_REQUIRED;
+        this.explanation = explanation;
     }
 
     public void submit() {

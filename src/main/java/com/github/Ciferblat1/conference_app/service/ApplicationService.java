@@ -72,7 +72,7 @@ public class ApplicationService {
             .orElseThrow(() -> new DirectionNotFoundException(directionId));
 
 
-        Application application = new Application(author, direction, snapshot, supervisors, title, theses, references);
+        Application application = new Application(author, direction, snapshot, supervisors, title, theses, references, null);
 
         applicationRepository.save(application);
         return application;
@@ -123,7 +123,7 @@ public class ApplicationService {
     @Transactional 
     public Application setWithdrawStatus(UUID id, UUID currentUserId) {
 
-        if(id == null) {
+        if(id == null || currentUserId == null) {
             throw new IllegalArgumentException("ID не может быть null");
         }
 
@@ -143,6 +143,8 @@ public class ApplicationService {
         return application;
     }
 
+    
+
 
     @Transactional 
     public Application updateApplication(
@@ -154,10 +156,15 @@ public class ApplicationService {
         List<String> references,
         boolean refreshAuthorSnapshot) {
 
-            checkSubmissionDeadline();
-
             Application application = getApplicationById(applicationId, userId);
 
+            if(application.getStatus() == ApplicationStatus.REVISION_REQUIRED) {
+                checkModerationDeadline();
+            }
+            else {
+                checkSubmissionDeadline();
+            }
+            
             //Обновлять можно только поданные заявки
             ApplicationStatus oldStatus = application.getStatus();
             if(oldStatus == ApplicationStatus.APPROVED) {
@@ -178,6 +185,84 @@ public class ApplicationService {
         }
 
 
+    //===============================МОДЕРАЦИЯ ЗАЯВОК ОРГАНИЗАТОРОМ НАПРАВЛЕНИЯ===============================
+
+    //Одобрить заявку организатором направления
+    @Transactional 
+    public Application setApprovedStatus(UUID id, UUID currentUserId) {
+
+        if(id == null || currentUserId == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        checkModerationDeadline();
+
+        Application application = getApplicationById(id, currentUserId);
+
+        checkDirectionOrganizer(application, currentUserId);
+
+        if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
+            application.approve();
+        }
+        else {
+            throw new InvalidApplicationStateException(id, application.getStatus());
+        }
+        
+        return application;
+    }
+
+
+    //Отклонить заявку организатором направления
+    @Transactional 
+    public Application setRejectedStatus(UUID id, UUID currentUserId) {
+
+        if(id == null || currentUserId == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        checkModerationDeadline();
+
+        Application application = getApplicationById(id, currentUserId);
+
+        checkDirectionOrganizer(application, currentUserId);
+
+        if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
+            application.reject();
+        }
+        else {
+            throw new InvalidApplicationStateException(id, application.getStatus());
+        }
+        
+        return application;
+    }
+
+
+    //Отправить заявку на доработку
+    @Transactional 
+    public Application setRevisionStatus(UUID id, UUID currentUserId, String explanation) {
+
+        if(id == null || currentUserId == null) {
+            throw new IllegalArgumentException("ID не может быть null");
+        }
+
+        checkModerationDeadline();
+
+        Application application = getApplicationById(id, currentUserId);
+
+        checkDirectionOrganizer(application, currentUserId);
+
+        if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
+            application.toRevision(explanation);
+        }
+        else {
+            throw new InvalidApplicationStateException(id, application.getStatus());
+        }
+        
+        return application;
+    }
+
+
+
     /**
      * Проверяет, прошел ли момент дедлайна подачи заявки
      * 
@@ -191,6 +276,19 @@ public class ApplicationService {
             .orElseThrow(() -> new ConferenceSettingsNotFoundException(settingsId));
 
         if(!Instant.now().isBefore(settings.getSubmissionDeadline())) {
+            throw new ApplicationDeadlinePassedException();
+        }
+    }
+
+
+    private void checkModerationDeadline() {
+
+        Short settingsId = (short) 1;
+        
+        ConferenceSettings settings = conferenceSettingsRepository.findById(settingsId)
+            .orElseThrow(() -> new ConferenceSettingsNotFoundException(settingsId));
+
+        if(!Instant.now().isBefore(settings.getModerationDeadline())) {
             throw new ApplicationDeadlinePassedException();
         }
     }
@@ -225,6 +323,22 @@ public class ApplicationService {
             throw new ApplicationAccessDeniedException(application.getId());
         }
     }
+
+
+    //Проверить, является ли пользователь организатором направления
+    private void checkDirectionOrganizer(Application application, UUID currentId) {
+
+        User user = userRepository.findById(currentId).orElseThrow(() -> new UserNotFoundException(currentId));
+
+        boolean isOrganizerForDirection = 
+            user.getRole() == UserRole.ORGANIZER 
+            && user.getDirectionId().equals(application.getDirection().getId());
+
+        if(!isOrganizerForDirection) {
+            throw new ApplicationAccessDeniedException(application.getId());
+        }
+    }
+
 
     //Проверить, является ли пользователь автором заявки или организатором направления
     private void checkUser(Application application, UUID currentId) {

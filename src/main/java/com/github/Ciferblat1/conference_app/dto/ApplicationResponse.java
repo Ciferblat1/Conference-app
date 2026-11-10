@@ -18,6 +18,7 @@ public record ApplicationResponse(
     List<String> referencesList,
     ApplicationStatus status,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    String explanation
 ) {
 } 

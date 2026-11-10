@@ -35,14 +35,14 @@ public class UserController {
     @Operation (
         summary = "Получение пользователя по ID"
     )
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable("id") UUID id) {
 
         User user = userService.getUserById(id);
 
         UserResponse response = new UserResponse(
-            user.getId(), user.getEmail(), user.getAlias(), user.getRole()
+            user.getId(), user.getEmail(), user.getAlias(), user.getRole(), user.getDirectionId()
         );
 
         return ResponseEntity.ok(response);
@@ -52,7 +52,7 @@ public class UserController {
     @Operation (
         summary = "Получение всех пользователей"
     )
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping 
     public ResponseEntity<List<UserResponse>> getAllUsers() {
 
@@ -63,7 +63,9 @@ public class UserController {
                 user.getId(), 
                 user.getEmail(), 
                 user.getAlias(), 
-                user.getRole())).toList();
+                user.getRole(),
+                user.getDirectionId()
+            )).toList();
 
         return ResponseEntity.ok(response);
     }
