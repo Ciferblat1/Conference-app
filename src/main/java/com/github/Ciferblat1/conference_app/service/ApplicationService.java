@@ -7,6 +7,11 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.Ciferblat1.conference_app.dto.ApplicationExpertResponse;
+import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
+import com.github.Ciferblat1.conference_app.dto.AuthorSnapshotResponse;
+import com.github.Ciferblat1.conference_app.dto.SupervisorRequest;
+import com.github.Ciferblat1.conference_app.dto.SupervisorResponse;
 import com.github.Ciferblat1.conference_app.entity.Application;
 import com.github.Ciferblat1.conference_app.entity.ApplicationAuthorSnapshot;
 import com.github.Ciferblat1.conference_app.entity.ApplicationStatus;
@@ -42,7 +47,7 @@ public class ApplicationService {
 
 
     @Transactional 
-    public Application createApplication(
+    public ApplicationResponse createApplication(
         UUID authorId, 
         UUID directionId, 
         List<ApplicationSupervisor> supervisors,
@@ -75,24 +80,35 @@ public class ApplicationService {
         Application application = new Application(author, direction, snapshot, supervisors, title, theses, references, null);
 
         applicationRepository.save(application);
-        return application;
+        return toResponse(application);
     }
 
 
 
     @Transactional(readOnly = true)
-    public List<Application> getAllApplications(UUID userId) {
+    public List<ApplicationResponse> getAllApplications(UUID userId) {
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
 
-        return  applicationRepository.findByDirectionId(user.getDirectionId());
+        return applicationRepository
+            .findByDirectionId(user.getDirectionId())
+                .stream()
+                    .map(application -> toResponse(application))
+                        .toList();
     }
 
 
     @Transactional(readOnly = true)
-    public Application getApplicationById(UUID id, UUID userId) {
+    public ApplicationResponse getApplicationById(UUID id, UUID userId) {
 
+        Application application = findApplicationById(id, userId);
+
+        return toResponse(application);
+    }
+
+
+    private Application findApplicationById(UUID id, UUID userId) {
         if(id == null || userId == null) {
             throw new IllegalArgumentException("ID не может быть null");
         }
@@ -107,18 +123,22 @@ public class ApplicationService {
 
 
     @Transactional(readOnly = true)
-    public List<Application> getApplicationsByAuthorId(UUID id) {
+    public List<ApplicationResponse> getApplicationsByAuthorId(UUID id) {
 
         if(id == null) {
             throw new IllegalArgumentException("ID не может быть null");
         }
 
-        return applicationRepository.findByAuthorId(id);
+        return applicationRepository
+            .findByAuthorId(id)
+                .stream()
+                    .map(application -> toResponse(application))
+                        .toList();
     }
 
 
     @Transactional 
-    public List<Application> getApplicationsForExpert(UUID expertId) {
+    public List<ApplicationExpertResponse> getApplicationsForExpert(UUID expertId) {
         
         if(expertId == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -130,13 +150,17 @@ public class ApplicationService {
             throw new ApplicationAccessDeniedException(expertId);
         }
 
-        return applicationRepository.findByDirectionId(user.getDirectionId());
+        return applicationRepository
+            .findByDirectionId(user.getDirectionId())
+                .stream()
+                    .map(application -> toExpertResponse(application))
+                        .toList();
     }
 
 
 
     @Transactional 
-    public Application setWithdrawStatus(UUID id, UUID currentUserId) {
+    public ApplicationResponse setWithdrawStatus(UUID id, UUID currentUserId) {
 
         if(id == null || currentUserId == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -144,7 +168,7 @@ public class ApplicationService {
 
         checkSubmissionDeadline();
 
-        Application application = getApplicationById(id, currentUserId);
+        Application application = findApplicationById(id, currentUserId);
 
         checkAuthor(application, currentUserId);
 
@@ -155,13 +179,13 @@ public class ApplicationService {
             throw new InvalidApplicationStateException(id, application.getStatus());
         }
         
-        return application;
+        return toResponse(application);
     }
 
 
 
     @Transactional 
-    public Application updateApplication(
+    public ApplicationResponse updateApplication(
         UUID userId,
         UUID applicationId, 
         List<ApplicationSupervisor> supervisors,
@@ -170,7 +194,7 @@ public class ApplicationService {
         List<String> references,
         boolean refreshAuthorSnapshot) {
 
-            Application application = getApplicationById(applicationId, userId);
+            Application application = findApplicationById(applicationId, userId);
 
             if(application.getStatus() == ApplicationStatus.REVISION_REQUIRED) {
                 checkModerationDeadline();
@@ -195,7 +219,7 @@ public class ApplicationService {
 
             application.update(snapshot, supervisors, title, theses, references, newStatus);
 
-            return application;
+            return toResponse(application);
         }
 
 
@@ -203,7 +227,7 @@ public class ApplicationService {
 
     //Одобрить заявку организатором направления
     @Transactional 
-    public Application setApprovedStatus(UUID id, UUID currentUserId) {
+    public ApplicationResponse setApprovedStatus(UUID id, UUID currentUserId) {
 
         if(id == null || currentUserId == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -211,7 +235,7 @@ public class ApplicationService {
 
         checkModerationDeadline();
 
-        Application application = getApplicationById(id, currentUserId);
+        Application application = findApplicationById(id, currentUserId);
 
         checkDirectionOrganizer(application, currentUserId);
 
@@ -222,13 +246,13 @@ public class ApplicationService {
             throw new InvalidApplicationStateException(id, application.getStatus());
         }
         
-        return application;
+        return toResponse(application);
     }
 
 
     //Отклонить заявку организатором направления
     @Transactional 
-    public Application setRejectedStatus(UUID id, UUID currentUserId) {
+    public ApplicationResponse setRejectedStatus(UUID id, UUID currentUserId) {
 
         if(id == null || currentUserId == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -236,7 +260,7 @@ public class ApplicationService {
 
         checkModerationDeadline();
 
-        Application application = getApplicationById(id, currentUserId);
+        Application application = findApplicationById(id, currentUserId);
 
         checkDirectionOrganizer(application, currentUserId);
 
@@ -247,13 +271,13 @@ public class ApplicationService {
             throw new InvalidApplicationStateException(id, application.getStatus());
         }
         
-        return application;
+        return toResponse(application);
     }
 
 
     //Отправить заявку на доработку
     @Transactional 
-    public Application setRevisionStatus(UUID id, UUID currentUserId, String explanation) {
+    public ApplicationResponse setRevisionStatus(UUID id, UUID currentUserId, String explanation) {
 
         if(id == null || currentUserId == null) {
             throw new IllegalArgumentException("ID не может быть null");
@@ -261,7 +285,7 @@ public class ApplicationService {
 
         checkModerationDeadline();
 
-        Application application = getApplicationById(id, currentUserId);
+        Application application = findApplicationById(id, currentUserId);
 
         checkDirectionOrganizer(application, currentUserId);
 
@@ -272,9 +296,75 @@ public class ApplicationService {
             throw new InvalidApplicationStateException(id, application.getStatus());
         }
         
-        return application;
+        return toResponse(application);
     }
 
+
+    //===============================ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ===============================
+
+
+    //Преобразовать сущность заявки в ответ заявки
+    private ApplicationResponse toResponse(Application application) {
+        return new ApplicationResponse(
+            application.getId(),
+            application.getAuthor().getId(),
+            application.getDirection().getId(),
+            toAuthorSnapshotResponse(application.getAuthorSnapshot()),
+            application.getSupervisors().stream()
+                    .map(this::toSupervisorResponse)
+                    .toList(),
+            application.getTitle(),
+            application.getTheses(),
+            List.copyOf(application.getReferencesList()),
+            application.getStatus(),
+            application.getCreatedAt(),
+            application.getUpdatedAt(),
+            application.getExplanation()
+        );
+    }
+
+    //Преобразовать сущность заявки в ответ заявки для эксперта (без личных данных)
+    private ApplicationExpertResponse toExpertResponse(Application application) {
+        return new ApplicationExpertResponse(
+            application.getId(),
+            application.getDirection().getId(),
+            application.getTitle(),
+            application.getTheses(),
+            List.copyOf(application.getReferencesList()),
+            application.getStatus(),
+            application.getCreatedAt(),
+            application.getUpdatedAt()
+        );
+    }
+
+    //Преобразовать снапшот данных автора в ответ снапшота
+    private AuthorSnapshotResponse toAuthorSnapshotResponse(
+            ApplicationAuthorSnapshot snapshot
+    ) {
+        return new AuthorSnapshotResponse(
+                snapshot.getFirstName(),
+                snapshot.getSurname(),
+                snapshot.getPatronymic(),
+                snapshot.getPhone(),
+                snapshot.getGroupName(),
+                snapshot.getEmail(),
+                snapshot.getFundingType()
+        );
+    }
+
+
+    //Преобразовать сущность научного руководителя в ответ руководителя
+    private SupervisorResponse toSupervisorResponse(
+            ApplicationSupervisor supervisor
+    ) {
+        return new SupervisorResponse(
+                supervisor.getFirstName(),
+                supervisor.getSurname(),
+                supervisor.getPatronymic(),
+                supervisor.getPosition(),
+                supervisor.getDepartment()
+        );
+    }
     
     /**
      * Проверяет, прошел ли момент дедлайна подачи заявки
@@ -294,6 +384,7 @@ public class ApplicationService {
     }
 
 
+    //Проверяет, прошел ли момент дедлайна модерации заявки
     private void checkModerationDeadline() {
 
         Short settingsId = (short) 1;
