@@ -1,8 +1,10 @@
 package com.github.Ciferblat1.conference_app.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.Ciferblat1.conference_app.dto.ChangeDeadlinesRequest;
 import com.github.Ciferblat1.conference_app.dto.ConferenceSettingsResponse;
+import com.github.Ciferblat1.conference_app.dto.CreateDirectionUserRequest;
+import com.github.Ciferblat1.conference_app.dto.UserResponse;
 import com.github.Ciferblat1.conference_app.service.ConferenceSettingsService;
 import com.github.Ciferblat1.conference_app.service.UserService;
 
@@ -27,9 +31,23 @@ public class AdminController {
 
 
     //Создание организатора направления
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping ("/direction-user")
+    public ResponseEntity<UserResponse> createDirectionUser(
+        @Valid @RequestBody CreateDirectionUserRequest request
+    ) {
 
+        UserResponse response = userService.createDirectionUser(
+            request.email(), 
+            request.alias(), 
+            request.role(), 
+            request.password(),
+            request.directionId()
+        );
 
-    //Создание члена экспертной комиссии
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
 
     //Изменение дедлайнов
     @PreAuthorize("hasRole('ADMIN')")
@@ -44,7 +62,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    
+
     //Получение дедлайнов
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/deadlines")
