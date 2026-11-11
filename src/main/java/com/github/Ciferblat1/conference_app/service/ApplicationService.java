@@ -275,8 +275,7 @@ public class ApplicationService {
         return application;
     }
 
-
-
+    
     /**
      * Проверяет, прошел ли момент дедлайна подачи заявки
      * 

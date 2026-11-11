@@ -39,7 +39,7 @@ public class DirectionController {
     @Operation (
         summary = "Создать направление"
     )
-    @PreAuthorize("hasRole('ORGANIZER')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping 
     public ResponseEntity<DirectionResponse> createDirection(
         @Valid @RequestBody  CreateDirectionRequest request

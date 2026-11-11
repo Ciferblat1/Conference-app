@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 @Tag (
     name = "Пользователи",
-    description = "Создание и получение пользователей"
+    description = "Получение пользователей"
 )
 @RestController 
 @RequiredArgsConstructor 
