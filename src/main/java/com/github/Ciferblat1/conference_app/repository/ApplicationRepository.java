@@ -11,4 +11,6 @@ public interface ApplicationRepository extends JpaRepository<Application, UUID>{
     public List<Application> findByAuthorId(UUID authotId);
 
     public List<Application> findByDirectionId(UUID directionId);
+
+    public List<Application> findByPendingDirection_Id(UUID directionId);
 }

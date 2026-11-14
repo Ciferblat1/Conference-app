@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.Ciferblat1.conference_app.dto.ApplicationExpertResponse;
 import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
+import com.github.Ciferblat1.conference_app.dto.ApplicationTransferRequest;
 import com.github.Ciferblat1.conference_app.dto.CreateApplicationRequest;
 import com.github.Ciferblat1.conference_app.dto.RevisionRequest;
 import com.github.Ciferblat1.conference_app.dto.SupervisorRequest;
@@ -208,10 +210,63 @@ public class ApplicationController {
         return ResponseEntity.ok(response);
     }
 
+    //===============================ПЕРЕВОД ЗАЯВОК==========================================
+
+    //Запросить перевод заявки на другое направление
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PatchMapping("/{applicationId}/transfer")
+    public ResponseEntity<ApplicationResponse> requestTransferApplication(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @Valid @RequestBody ApplicationTransferRequest request,
+        @PathVariable UUID applicationId
+    ) {
+        ApplicationResponse response = applicationService
+            .requestTransferApplication(principal.getId(), applicationId, request.targetDirectionId());
+
+        return ResponseEntity.ok(response);
+    }
+
+    //Одобрить перевод заявки
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PatchMapping("/{applicationId}/transfer/apply")
+    public ResponseEntity<ApplicationResponse> applyTransferApplication(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @PathVariable UUID applicationId
+    ) {
+        ApplicationResponse response = applicationService
+            .applyTransferApplication(principal.getId(), applicationId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    //Отклонить перевод заявки
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @PatchMapping("/{applicationId}/transfer/reject")
+    public ResponseEntity<ApplicationResponse> rejectTransferApplication(
+        @AuthenticationPrincipal AppUserDetails principal,
+        @PathVariable UUID applicationId
+    ) {
+        ApplicationResponse response = applicationService
+            .rejectTransferApplication(principal.getId(), applicationId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    //Просмотреть все заявки, ожидающие перевода
+    @PreAuthorize("hasRole('ORGANIZER')")
+    @GetMapping("/transfers")
+    public ResponseEntity<List<ApplicationResponse>> getPendingTransferApplications(
+        @AuthenticationPrincipal AppUserDetails principal
+    ) {
+        List<ApplicationResponse> response = applicationService.getPendingTransferApplications(principal.getId());
+
+        return ResponseEntity.ok(response);
+    }
 
     //===============================ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ===============================
 
 
+    //Преобразует список заявок на создание научных руководителей в список сущностей 
     private List<ApplicationSupervisor> toSupervisorsEntity(List<SupervisorRequest> supervisors) {
 
         return  supervisors.stream().map(

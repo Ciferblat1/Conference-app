@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.Ciferblat1.conference_app.dto.ApplicationExpertResponse;
 import com.github.Ciferblat1.conference_app.dto.ApplicationResponse;
 import com.github.Ciferblat1.conference_app.dto.AuthorSnapshotResponse;
-import com.github.Ciferblat1.conference_app.dto.SupervisorRequest;
 import com.github.Ciferblat1.conference_app.dto.SupervisorResponse;
 import com.github.Ciferblat1.conference_app.entity.Application;
 import com.github.Ciferblat1.conference_app.entity.ApplicationAuthorSnapshot;
@@ -300,6 +299,139 @@ public class ApplicationService {
     }
 
 
+    //===============================ПЕРЕВОД ЗАЯВОК======================================
+
+    //Запросить перевод заявки на новое направление
+    @Transactional 
+    public ApplicationResponse requestTransferApplication(UUID userId, UUID applicationId, UUID targetDirectionId) {
+
+        if(userId == null || applicationId == null || targetDirectionId == null) {
+            throw new IllegalArgumentException("Id пользвателя, заявки и целевого направления не могут быть пусты");
+        }
+
+        checkModerationDeadline();
+
+        User currentUser = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId));
+
+        Application application = applicationRepository.findById(applicationId)
+            .orElseThrow(() -> new ApplicationNotFoundException(applicationId)); 
+
+        if(targetDirectionId.equals(application.getDirection().getId())) {
+            throw new IllegalArgumentException("Заява уже на целевом направлении");
+        }
+
+        if(application.getPendingDirection() != null) {
+            throw new IllegalStateException("Заявка уже ожидает перевода");
+        }
+
+        ApplicationStatus status = application.getStatus();
+        if(status != ApplicationStatus.SUBMITTED && status != ApplicationStatus.CHANGED) {
+            throw new IllegalStateException("Заявку со статусом " + status + " нельзя перевести на другое направление");
+        }
+
+        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
+            && currentUser.getDirectionId().equals(application.getDirection().getId());
+
+        if(!isAccessAllowed) {
+            throw new ApplicationAccessDeniedException(applicationId);
+        }
+
+        Direction targetDirection = directionRepository.findById(targetDirectionId)
+            .orElseThrow(() -> new DirectionNotFoundException(targetDirectionId));
+
+        application.requestTransfer(targetDirection);
+        return toResponse(application);
+    }
+
+
+    //Принять заявку на новое направление
+    @Transactional 
+    public ApplicationResponse applyTransferApplication(UUID userId, UUID applicationId) {
+
+        if(userId == null || applicationId == null) {
+            throw new IllegalArgumentException("Id пользвателя и заявки не могут быть пусты");
+        }
+
+        checkModerationDeadline();
+
+        User currentUser = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId));
+
+        Application application = applicationRepository.findById(applicationId)
+            .orElseThrow(() -> new ApplicationNotFoundException(applicationId)); 
+
+        if(application.getPendingDirection() == null) {
+            throw new IllegalStateException("Нельзя перевести заявку, не ожидающую перевода");
+        }
+
+        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
+            && currentUser.getDirectionId().equals(application.getPendingDirection().getId());
+
+        if(!isAccessAllowed) {
+            throw new ApplicationAccessDeniedException(applicationId);
+        }
+
+        application.applyTransfer();
+        return toResponse(application);
+    }
+
+    //Отклонить перевод заявки на новое направление
+    @Transactional 
+    public ApplicationResponse rejectTransferApplication(UUID userId, UUID applicationId) {
+
+        if(userId == null || applicationId == null) {
+            throw new IllegalArgumentException("Id пользвателя и заявки не могут быть пусты");
+        }
+
+        checkModerationDeadline();
+
+        User currentUser = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId));
+
+        Application application = applicationRepository.findById(applicationId)
+            .orElseThrow(() -> new ApplicationNotFoundException(applicationId)); 
+
+        if(application.getPendingDirection() == null) {
+            throw new IllegalStateException("Нельзя отклонить заявку, не ожидающую перевода");
+        }
+
+        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
+            && currentUser.getDirectionId().equals(application.getPendingDirection().getId());
+
+        if(!isAccessAllowed) {
+            throw new ApplicationAccessDeniedException(applicationId);
+        }
+
+        application.rejectTransfer();
+        return toResponse(application);
+    }
+
+
+    //Получить заявки, ожидающие от текущего пользователя подтверждения
+    @Transactional 
+    public List<ApplicationResponse> getPendingTransferApplications(UUID userId) {
+
+        if(userId == null) {
+            throw new IllegalArgumentException("Id пользователя не может быть пустым");
+        }
+
+        User currentUser = userRepository.findById(userId)
+            .orElseThrow(() -> new UserNotFoundException(userId));
+
+        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER;
+
+        if(!isAccessAllowed) {
+            throw new IllegalArgumentException("Переданный id не принадлежит организатору направления");
+        }
+
+        return applicationRepository
+            .findByPendingDirection_Id(currentUser.getDirectionId())
+                .stream()
+                    .map(application -> toResponse(application))
+                        .toList();
+    }
+
     //===============================ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ===============================
 
 
@@ -319,7 +451,8 @@ public class ApplicationService {
             application.getStatus(),
             application.getCreatedAt(),
             application.getUpdatedAt(),
-            application.getExplanation()
+            application.getExplanation(),
+            application.getPendingDirection() != null ? application.getPendingDirection().getId() : null
         );
     }
 

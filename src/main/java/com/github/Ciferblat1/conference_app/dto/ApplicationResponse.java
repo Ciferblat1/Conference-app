@@ -19,6 +19,7 @@ public record ApplicationResponse(
     ApplicationStatus status,
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
-    String explanation
+    String explanation,
+    UUID pendingDirectionId
 ) {
 } 

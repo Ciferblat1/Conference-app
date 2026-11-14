@@ -59,6 +59,9 @@ public class Application {
     @JoinColumn(name = "direction_id", nullable = false)
     private Direction direction;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pending_direction_id", nullable = true)
+    private Direction pendingDirection;
 
     @Column(name = "title", nullable = false)
     private String title;
@@ -116,6 +119,7 @@ public class Application {
     }
 
 
+    //Обновить заявку
     public void update(
         ApplicationAuthorSnapshot authorSnapshot, 
         List<ApplicationSupervisor> supervisors,
@@ -133,6 +137,27 @@ public class Application {
         this.explanation = null;
     }
 
+    //Подать запрос на перевод заявки 
+    public void requestTransfer(Direction targetDirection) {
+        this.pendingDirection = targetDirection;
+    }
+
+    //Одобрить перевод заявки
+    public void applyTransfer() {
+
+        Direction targetDirection = this.pendingDirection;
+        if(targetDirection == null) {
+            throw new IllegalStateException("Нельзя осуществить перевод заявки, если у нее нет целевого направления");
+        }
+
+        this.direction = targetDirection;
+        this.pendingDirection = null;
+    }
+
+    //Отклонить перевод заявки
+    public void rejectTransfer() {
+        this.pendingDirection = null;
+    }
 
     @PrePersist 
     private void onCreate() {
