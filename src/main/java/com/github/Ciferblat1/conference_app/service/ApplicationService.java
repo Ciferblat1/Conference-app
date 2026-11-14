@@ -1,5 +1,6 @@
 package com.github.Ciferblat1.conference_app.service;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -169,6 +170,8 @@ public class ApplicationService {
 
         Application application = findApplicationById(id, currentUserId);
 
+        checkApplicationTransferring(application);
+
         checkAuthor(application, currentUserId);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
@@ -201,6 +204,8 @@ public class ApplicationService {
             else {
                 checkSubmissionDeadline();
             }
+
+            checkApplicationTransferring(application);
             
             //Обновлять можно только поданные заявки
             ApplicationStatus oldStatus = application.getStatus();
@@ -233,10 +238,12 @@ public class ApplicationService {
         }
 
         checkModerationDeadline();
-
+        
         Application application = findApplicationById(id, currentUserId);
 
-        checkDirectionOrganizer(application, currentUserId);
+        checkApplicationTransferring(application);
+
+        checkDirectionOrganizer(application.getDirection().getId(), currentUserId);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
             application.approve();
@@ -261,7 +268,8 @@ public class ApplicationService {
 
         Application application = findApplicationById(id, currentUserId);
 
-        checkDirectionOrganizer(application, currentUserId);
+        checkApplicationTransferring(application);
+        checkDirectionOrganizer(application.getDirection().getId(), currentUserId);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
             application.reject();
@@ -286,7 +294,8 @@ public class ApplicationService {
 
         Application application = findApplicationById(id, currentUserId);
 
-        checkDirectionOrganizer(application, currentUserId);
+        checkApplicationTransferring(application);
+        checkDirectionOrganizer(application.getDirection().getId(), currentUserId);
 
         if(application.getStatus() == ApplicationStatus.SUBMITTED || application.getStatus() == ApplicationStatus.CHANGED) {
             application.toRevision(explanation);
@@ -311,11 +320,10 @@ public class ApplicationService {
 
         checkModerationDeadline();
 
-        User currentUser = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
-
         Application application = applicationRepository.findById(applicationId)
             .orElseThrow(() -> new ApplicationNotFoundException(applicationId)); 
+
+        checkDirectionOrganizer(application.getDirection().getId(), userId);
 
         if(targetDirectionId.equals(application.getDirection().getId())) {
             throw new IllegalArgumentException("Заява уже на целевом направлении");
@@ -328,13 +336,6 @@ public class ApplicationService {
         ApplicationStatus status = application.getStatus();
         if(status != ApplicationStatus.SUBMITTED && status != ApplicationStatus.CHANGED) {
             throw new IllegalStateException("Заявку со статусом " + status + " нельзя перевести на другое направление");
-        }
-
-        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
-            && currentUser.getDirectionId().equals(application.getDirection().getId());
-
-        if(!isAccessAllowed) {
-            throw new ApplicationAccessDeniedException(applicationId);
         }
 
         Direction targetDirection = directionRepository.findById(targetDirectionId)
@@ -355,9 +356,6 @@ public class ApplicationService {
 
         checkModerationDeadline();
 
-        User currentUser = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
-
         Application application = applicationRepository.findById(applicationId)
             .orElseThrow(() -> new ApplicationNotFoundException(applicationId)); 
 
@@ -365,12 +363,7 @@ public class ApplicationService {
             throw new IllegalStateException("Нельзя перевести заявку, не ожидающую перевода");
         }
 
-        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
-            && currentUser.getDirectionId().equals(application.getPendingDirection().getId());
-
-        if(!isAccessAllowed) {
-            throw new ApplicationAccessDeniedException(applicationId);
-        }
+        checkDirectionOrganizer(application.getPendingDirection().getId(), userId);
 
         application.applyTransfer();
         return toResponse(application);
@@ -386,9 +379,6 @@ public class ApplicationService {
 
         checkModerationDeadline();
 
-        User currentUser = userRepository.findById(userId)
-            .orElseThrow(() -> new UserNotFoundException(userId));
-
         Application application = applicationRepository.findById(applicationId)
             .orElseThrow(() -> new ApplicationNotFoundException(applicationId)); 
 
@@ -396,12 +386,7 @@ public class ApplicationService {
             throw new IllegalStateException("Нельзя отклонить заявку, не ожидающую перевода");
         }
 
-        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
-            && currentUser.getDirectionId().equals(application.getPendingDirection().getId());
-
-        if(!isAccessAllowed) {
-            throw new ApplicationAccessDeniedException(applicationId);
-        }
+        checkDirectionOrganizer(application.getPendingDirection().getId(), userId);
 
         application.rejectTransfer();
         return toResponse(application);
@@ -419,7 +404,8 @@ public class ApplicationService {
         User currentUser = userRepository.findById(userId)
             .orElseThrow(() -> new UserNotFoundException(userId));
 
-        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER;
+        boolean isAccessAllowed = currentUser.getRole() == UserRole.ORGANIZER 
+            && currentUser.getDirectionId() != null;
 
         if(!isAccessAllowed) {
             throw new IllegalArgumentException("Переданный id не принадлежит организатору направления");
@@ -563,34 +549,34 @@ public class ApplicationService {
 
 
     //Проверить, является ли пользователь организатором направления
-    private void checkDirectionOrganizer(Application application, UUID currentId) {
+    private void checkDirectionOrganizer(UUID directionId, UUID userId) {
 
-        User user = userRepository.findById(currentId).orElseThrow(() -> new UserNotFoundException(currentId));
-
-        boolean isOrganizerForDirection = 
-            user.getRole() == UserRole.ORGANIZER 
-            && user.getDirectionId().equals(application.getDirection().getId());
-
-        if(!isOrganizerForDirection) {
-            throw new ApplicationAccessDeniedException(application.getId());
+        if(!isOrganizerForDirection(directionId, userId)) {
+            throw new AccessDeniedException("Пользователь с id "+ userId + " не является организатором направления с id" + directionId);
         }
     }
 
+    private boolean isOrganizerForDirection(UUID directionId, UUID userId) {
+
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
+
+        return user.getRole() == UserRole.ORGANIZER 
+            && user.getDirectionId().equals(directionId);
+    }
 
     //Проверить, является ли пользователь автором заявки или организатором направления
     private void checkUser(Application application, UUID currentId) {
 
         boolean isAuthor = application.getAuthor().getId().equals(currentId);
 
-        User user = userRepository.findById(currentId).orElseThrow(() -> new UserNotFoundException(currentId));
-
-        boolean isOrganizerForDirection = 
-            user.getRole() == UserRole.ORGANIZER 
-            && user.getDirectionId().equals(application.getDirection().getId());
-
-
-        if(!isAuthor && !isOrganizerForDirection) {
+        if(!isAuthor && !isOrganizerForDirection(application.getDirection().getId(), currentId)) {
             throw new ApplicationAccessDeniedException(application.getId());
+        }
+    }
+
+    private void checkApplicationTransferring(Application application) {
+        if(application.getPendingDirection() != null) {
+            throw new IllegalStateException("Заявка находится в ожидании перевода на другое направление");
         }
     }
 }
